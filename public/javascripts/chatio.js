@@ -1,3 +1,3 @@
 'use strict';
 
-var chatio = angular.module('chatio', ['ngRoute', 'ngCookies', 'luegg.directives']);
+var chatio = angular.module('chatio', ['ngRoute', 'ngCookies', 'ngSanitize', 'luegg.directives']);

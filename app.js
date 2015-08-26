@@ -67,45 +67,50 @@ usernames = [];
 history = [];
 
 io.sockets.on('connection', function(socket){
+
+  //When user logins
   socket.on('new user', function(data, callback){
     if (!callback) callback = function(){};
     if (usernames.indexOf(data) != -1) callback(false);
     else login(socket, data, callback);
+    console.log('User "' + socket.username + '" joined.');
+  });
+
+  //When user refreshes pages
+  socket.on('update user', function(data, callback){
+    login(socket, data, callback);
+    console.log('User "' + socket.username + '" re-joined.');
   });
 
   function login(socket, data, callback)
   {
     if (callback) callback(true);
     socket.username = data;
-    console.log('User "' + socket.username + '" joined.');
     if (usernames.indexOf(data) == -1) usernames.push(socket.username);
     updateUsernames();
-    socket.broadcast.emit('kick',{
+    //Drop connection on other pages where this user is logged
+    socket.broadcast.emit('kick', {
       name: socket.username,
       reason: 'Duplicate login'
     });
   }
 
-  socket.on('update user', function(data, callback){
-    login(socket, data, callback);
-    console.log('User "' + socket.username + '" re-joined.');
+  //Update usernames list
+  socket.on('update usernames', function(){
+    updateUsernames();
   });
 
-  //Update Usernames
   function updateUsernames()
   {
     io.sockets.emit('usernames', usernames);
   }
 
-  socket.on('update usernames', function(){
-    updateUsernames();
-  });
-
+  //Returns messages list
   socket.on('get history', function(callback){
     callback(history);
   });
 
-  //Send Message
+  //Send message
   socket.on('send message', function(data){
     history.push({
       msg: data,
@@ -119,25 +124,24 @@ io.sockets.on('connection', function(socket){
     });
   });
 
-  function logout(socket, data)
-  {
-    if (!socket.username) return false;
-    if (usernames.indexOf(socket.username) != -1) usernames.splice(usernames.indexOf(socket.username), 1);
-    updateUsernames();
-    return true;
-  }
   //Disconnect
   socket.on('disconnect', function(data){
-    if (data == 'kicked') return;
-    if (!logout(socket, data)) return;
+    if (!socket.username) return;
+    var f = 0;
+    var sockets = io.sockets.connected;
+    for (var cur in sockets)
+    {
+      if (sockets[cur].username == socket.username)
+      {
+        ++f;
+        break;
+      }
+    }
+    if (f > 0) return;
+    if (usernames.indexOf(socket.username) != -1) usernames.splice(usernames.indexOf(socket.username), 1);
+    updateUsernames();
     console.log('User "' + socket.username + '" disconnected.');
   });
-
-  socket.on('logout', function(data){
-    if (!logout(socket, data)) return;
-    console.log('User "' + socket.username + '" logged out.');
-    socket.broadcast.emit('logout', socket.username);
-  })
 
 });
 module.exports = app;

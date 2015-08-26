@@ -1,6 +1,6 @@
 #mainWrapper
 	.row
-		.col-md-6.col-md-offset-2.col-xs-8
+		.col-sm-6.col-sm-offset-2.col-xs-8
 			#chatWrapper
 				.panel.panel-default
 					.panel-heading
@@ -10,7 +10,7 @@
 							.row
 								.col-md-12
 									div(ng-repeat='message in messages track by $index')
-										|{{formatMessage(message)}}
+										div(ng-bind-html='formatMessage(message)')
 						form#messageForm(ng-submit='submit(msg)', novalidate, name='messageForm')
 							.form-group
 								.input-group
@@ -20,7 +20,7 @@
 						.row
 							.col-xs-6.col-xs-offset-3
 								button.btn.btn-default.form-control(ng-click='logout()') Logout
-		.col-md-2.col-xs-4
+		.col-sm-2.col-xs-4
 			#userWrapper
 				.panel.panel-default
 					.panel-heading

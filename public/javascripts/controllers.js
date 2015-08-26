@@ -31,7 +31,7 @@ chatio.controller('loginCtrl', function($scope, $location, $route, $log, userInf
 
 });
 
-chatio.controller('chatCtrl', function($scope, $location, userInfo){
+chatio.controller('chatCtrl', function($scope, $location, $sce, userInfo){
 
 	var socket = io.connect();
 
@@ -68,13 +68,10 @@ chatio.controller('chatCtrl', function($scope, $location, userInfo){
 
 	$scope.formatMessage = function(message){
 		if (message.type == 'error')
-			res = '.alert.alert-danger ' + message.msg;
+			res = '<div class="alert alert-danger">' + message.msg + '</div>';
 		else
-			res = 
-				'strong ' + message.user + '\n' + 
-				message.msg;
-		console.log(res);
-		return res;
+			res = '<strong>' + message.user + ': </strong>' + message.msg;
+		return $sce.trustAsHtml(res);
 	}
 
 	socket.on('usernames', function(data){
@@ -104,11 +101,14 @@ chatio.controller('chatCtrl', function($scope, $location, userInfo){
 
 	function kick(reason)
 	{
-		socket.close('kicked');
-		$scope.messages.push({
-			user: 'server',
-			type: 'error',
-			message: 'You have been kicked (Duplicate login)'
+		socket.close();
+
+		$scope.$apply(function(){
+			$scope.messages.push({
+				user: 'server',
+				type: 'error',
+				msg: 'You have been kicked (' + reason + ')'
+			});
 		});
 	}
 
