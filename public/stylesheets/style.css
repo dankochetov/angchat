@@ -1,0 +1,15 @@
+body {
+	padding-top: 20px;
+}
+
+#chatWindow {
+	min-height: 300px;
+	max-height: 300px;
+	overflow-y: auto;
+	overflow-x: hidden;
+	word-wrap: break-word;
+}
+
+#chatWindow p {
+	margin: 0 5px;
+}
