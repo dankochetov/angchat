@@ -15,7 +15,10 @@ var UserSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  rank: Number
+  rank: {
+    type: Number,
+    default: 1
+  }
 });
 
 var User = module.exports = mongoose.model('users', UserSchema);
