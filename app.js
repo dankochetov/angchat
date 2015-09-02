@@ -10,8 +10,12 @@ var LocalStrategy = require('passport-local').Strategy;
 var bcrypt = require('bcrypt-nodejs');
 var flash = require('connect-flash');
 var validator = require('express-validator');
+var mongo = require('mongodb');
+var mongoose = require('mongoose');
+mongoose.connect('mongodb://kochetov_dd:ms17081981ntv@ds035633.mongolab.com:35633/chatio');
 
 var User = require('./models/user');
+var Message = require('./models/message');
 
 passport.serializeUser(function(user, done) {
   done(null, user.id);
@@ -111,7 +115,31 @@ var io = require('socket.io').listen(server);
 server.listen(app.get('port'));
 
 usernames = [];
-history = [];
+
+function getHistory(callback)
+{
+  Message.find({}, function(err, messages){
+    callback(messages);
+  });
+}
+
+function addMessage(msg, callback)
+{
+  var message = new Message(msg);
+  message.save(function(err){
+    if (err) return console.log(err);
+    callback();
+  });
+}
+
+function clearHistory(callback)
+{
+  Message.remove({}, function(err){
+    if (err) return console.log(err);
+    console.log('history cleared');
+    callback();
+  });
+}
 
 io.sockets.on('connection', function(socket){
 
@@ -132,7 +160,7 @@ io.sockets.on('connection', function(socket){
         name: socket.username,
         reason: 'Duplicate login'
       });
-      
+
       data.callback(true);
       console.log('User "' + socket.username + '" joined.');
     }
@@ -150,21 +178,26 @@ io.sockets.on('connection', function(socket){
 
   //Returns messages list
   socket.on('get history', function(callback){
-    callback(history);
+    getHistory(function(messages){
+      callback(messages);
+    });
   });
 
   //Send message
   socket.on('send message', function(data){
-    history.push({
-      msg: data,
-      type: 'message',
-      user: socket.username
+    //console.log(socket.username + ': ' + data);
+    var msg = {
+      text: data,
+      time: Date.now(),
+      username: socket.username
+    };
+    addMessage(msg, function(){
+      io.sockets.emit('new message', msg);
     });
-    if (history.length > 50) history.splice(0, 1);
-    io.sockets.emit('new message', {
-      msg: data,
-      user: socket.username
-    });
+  });
+
+  socket.on('clear history', function(callback){
+    clearHistory(callback);
   });
 
   //Disconnect

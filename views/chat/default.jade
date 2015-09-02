@@ -4,7 +4,18 @@
 			#chatWrapper
 				.panel.panel-default
 					.panel-heading
-						h3 ChatIO - {{user.username}}
+						h3
+							.row
+								.col-xs-8
+									|ChatIO - {{user.username}}
+								.col-xs-4
+									.dropdown.pull-right
+										.button.btn.btn-default.dropdown-toggle(id='optionsMenu', data-toggle='dropdown', aria-haspopup='true', aria-expanded='true')
+											|Options
+											.span.caret
+										ul.dropdown-menu(aria-labelledby='optionsMenu')
+											li: a(href='', ng-click='clearChat()', ng-show='user.rank > 2') Clear chat
+											li: a(href='index/logout') Logout
 					.panel-body
 						#chatWindow(scroll-glue-bottom='checkScrollGlue()')
 							.row
@@ -17,9 +28,6 @@
 									input.form-control#message(size=35, placeholder='Write message...', ng-model='msg', required)
 									.input-group-btn
 										button.btn.btn-info(type='submit') Say It!
-						.row
-							.col-xs-6.col-xs-offset-3
-								button.btn.btn-default.form-control(ng-click='logout()') Logout
 		.col-md-2.col-xs-4
 			#userWrapper
 				.panel.panel-default

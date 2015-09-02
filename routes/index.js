@@ -87,4 +87,10 @@ router.get('/index', function(req, res, next){
 	res.render('index/index');
 });
 
+router.get('/logout', function(req, res, next){
+	if (req.isAuthenticated())
+		req.logout();
+	return res.redirect('/#/');
+});
+
 module.exports = router;

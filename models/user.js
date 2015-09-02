@@ -1,6 +1,5 @@
 var mongo = require('mongodb');
 var mongoose = require('mongoose');
-mongoose.connect('mongodb://kochetov_dd:ms17081981ntv@ds035633.mongolab.com:35633/chatio');
 
 var UserSchema = new mongoose.Schema({
   login: {
@@ -15,7 +14,8 @@ var UserSchema = new mongoose.Schema({
   password: {
     type: String,
     required: true
-  }
+  },
+  rank: Number
 });
 
 var User = module.exports = mongoose.model('users', UserSchema);

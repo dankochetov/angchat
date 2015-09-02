@@ -1,4 +1,4 @@
-chatio.controller('chatDefaultCtrl', function($scope, $location, $sce, auth){
+chatio.controller('chatDefaultCtrl', function($scope, $location, $sce, $filter, auth){
 
 	$scope.usernames = [];
 	$scope.messages = [];
@@ -11,11 +11,21 @@ chatio.controller('chatDefaultCtrl', function($scope, $location, $sce, auth){
 		socket.emit('new user', {username: $scope.user.username});
 
 		socket.emit('get history', function(data){
-			$scope.messages = data;
-			$scope.scrollGlue = true;
+			$scope.$apply(function(){
+				$scope.messages = data;
+				$scope.scrollGlue = true;
+			});
 		});
 		
 		socket.emit('update usernames');
+	}
+
+	$scope.clearChat = function(){
+		socket.emit('clear history', function(){
+			$scope.$apply(function(){
+				$scope.messages = [];
+			});
+		});
 	}
 
 	$scope.submit = function(msg){
@@ -26,9 +36,11 @@ chatio.controller('chatDefaultCtrl', function($scope, $location, $sce, auth){
 
 	$scope.formatMessage = function(message){
 		if (message.type == 'error')
-			res = '<div class="alert alert-danger">' + message.msg + '</div>';
+			res = '<div class="alert alert-danger">' + message.text + '</div>';
 		else
-			res = '<strong>' + message.user + ': </strong>' + message.msg;
+			res = '<small>' + $filter('date')(message.time, '[HH:mm:ss] ') + '</small>'
+				+ '<strong>' + message.username + ': </strong>'
+				+ message.text;
 		return $sce.trustAsHtml(res);
 	}
 
@@ -55,9 +67,9 @@ chatio.controller('chatDefaultCtrl', function($scope, $location, $sce, auth){
 
 		$scope.$apply(function(){
 			$scope.messages.push({
-				user: 'server',
+				username: 'server',
 				type: 'error',
-				msg: 'You have been kicked (' + reason + ')'
+				text: 'You have been kicked (' + reason + ')'
 			});
 		});
 	}
