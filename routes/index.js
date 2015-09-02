@@ -19,8 +19,19 @@ router.get('/signin', function(req, res, next){
 });
 
 router.post('/signin', function(req, res, next){
+	req.checkBody('login', 'Login field is empty!').notEmpty();
+	req.checkBody('password', 'Password field is empty!').notEmpty();
+
+	var errors = req.validationErrors();
+
+	if (errors)
+	{
+		req.flash('errors', errors);
+		return res.redirect('/#/signin');
+	}
+
 	passport.authenticate('local', function(err, user, info){
-		if (info) req.flash('errors', [{msg: info.error}]);
+		if (info) req.flash('errors', {msg: info.error});
 		if (err) return next(err);
 		if (!user)
 			return res.redirect('/#/signin');
