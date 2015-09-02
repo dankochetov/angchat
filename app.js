@@ -4,9 +4,46 @@ var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
+var session = require('express-session');
+var passport = require('passport');
+var LocalStrategy = require('passport-local').Strategy;
+var bcrypt = require('bcrypt-nodejs');
+var flash = require('connect-flash');
+var validator = require('express-validator');
 
-var routes = require('./routes/index');
-var login = require('./routes/login');
+var User = require('./models/user');
+
+passport.serializeUser(function(user, done) {
+  done(null, user.id);
+});
+
+passport.deserializeUser(function(id, done) {
+  User.findById(id, function(err, user){
+    done(err, user);
+  });
+});
+
+passport.use(new LocalStrategy({
+  usernameField: 'login',
+  passwordField: 'password'
+  },
+  function(username, password, done){
+    User.findOne({login: username}, function(err, user){
+      if (err) return done(err);
+      if (user)
+        bcrypt.compare(password, user.password, function(err, res){
+            if (err) return done(err);
+            if (res) return done(null, user);
+            return done(null, false, {error: 'Incorrect password!'});
+        });
+      else return done(null, false, {error: 'Incorrect username!'});
+    });
+  }
+));
+
+
+var root = require('./routes/root');
+var index = require('./routes/index');
 var chat = require('./routes/chat');
 
 var app = express();
@@ -23,9 +60,19 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(session({
+  saveUninitialized: true,
+  secret: 'SECRET',
+  resave: true
+}));
+app.use(flash());
+app.use(validator());
 
-app.use('/', routes);
-app.use('/login', login);
+app.use(passport.initialize());
+app.use(passport.session());
+
+app.use('/', root);
+app.use('/index', index);
 app.use('/chat', chat);
 
 // catch 404 and forward to error handler
@@ -68,32 +115,28 @@ history = [];
 
 io.sockets.on('connection', function(socket){
 
-  //When user logins
-  socket.on('new user', function(data, callback){
-    if (!callback) callback = function(){};
-    if (usernames.indexOf(data) != -1) callback(false);
-    else login(socket, data, callback);
-    console.log('User "' + socket.username + '" joined.');
-  });
+  console.log('new connection');
 
-  //When user refreshes pages
-  socket.on('update user', function(data, callback){
-    login(socket, data, callback);
-    console.log('User "' + socket.username + '" re-joined.');
-  });
+  //When user logins or refreshes the pages
+  socket.on('new user', function(data){
+    if (!data.callback) data.callback = function(){};
+    if (usernames.indexOf(data.username) != -1) data.callback(false);
+    else
+    {
+      socket.username = data.username;
+      if (usernames.indexOf(data.username) == -1) usernames.push(socket.username);
+      updateUsernames();
 
-  function login(socket, data, callback)
-  {
-    if (callback) callback(true);
-    socket.username = data;
-    if (usernames.indexOf(data) == -1) usernames.push(socket.username);
-    updateUsernames();
-    //Drop connection on other pages where this user is logged
-    socket.broadcast.emit('kick', {
-      name: socket.username,
-      reason: 'Duplicate login'
-    });
-  }
+      //Drop connection on other pages where this user is logged
+      socket.broadcast.emit('kick', {
+        name: socket.username,
+        reason: 'Duplicate login'
+      });
+      
+      data.callback(true);
+      console.log('User "' + socket.username + '" joined.');
+    }
+  });
 
   //Update usernames list
   socket.on('update usernames', function(){
@@ -125,23 +168,27 @@ io.sockets.on('connection', function(socket){
   });
 
   //Disconnect
-  socket.on('disconnect', function(data){
+  socket.on('disconnect', function(){
+    disconnect(socket);
+  });
+
+  socket.on('logout', function(){
+    disconnect(socket);
+  });
+
+  function disconnect(socket)
+  {
     if (!socket.username) return;
     var f = 0;
     var sockets = io.sockets.connected;
     for (var cur in sockets)
-    {
       if (sockets[cur].username == socket.username)
-      {
         ++f;
-        break;
-      }
-    }
     if (f > 0) return;
     if (usernames.indexOf(socket.username) != -1) usernames.splice(usernames.indexOf(socket.username), 1);
     updateUsernames();
     console.log('User "' + socket.username + '" disconnected.');
-  });
+  }
 
 });
 module.exports = app;

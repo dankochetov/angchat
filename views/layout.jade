@@ -1,0 +1,25 @@
+doctype html
+html(ng-app='chatio')
+	head
+		meta(name='viewport', content='width=device-width, initial-scale=1')
+		title ChatIO
+		link(rel='stylesheet', href='/stylesheets/style.css')
+		link(rel='stylesheet', href='/stylesheets/bootstrap.min.css')
+		script(src='/javascripts/jquery.js')
+		script(src='/javascripts/bootstrap.min.js')
+		script(src='/socket.io/socket.io.js')
+		script(src='/javascripts/angular.min.js')
+		script(src='/javascripts/angular-route.min.js')
+		script(src='/javascripts/angular-cookies.min.js')
+		script(src='/javascripts/angular-resource.min.js')
+		script(src='/javascripts/angular-sanitize.min.js')
+		script(src='javascripts/scrollglue.js')
+		script(src='javascripts/chatio.js')
+		script(src='javascripts/routes_#{service}.js')
+		script(src='javascripts/services.js')
+		script(src='javascripts/controllers.js')
+		script(src='javascripts/controllers_#{service}.js')
+	body
+		div(ng-controller='initCtrl', ng-init='init(\'#{JSON.stringify(user)}\')')
+		.container-fluid
+			block content

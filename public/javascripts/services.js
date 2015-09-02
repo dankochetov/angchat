@@ -1,28 +1,15 @@
-chatio.service('userInfo', function($cookies){
-	function user()
-	{
-		return $cookies.getObject('user');
-	} 
-
-	return {
-		logged: function(){
-			if (user() == undefined) return false;
-			return user().logged;
-		},
-
-		name: function(){
-			return user().name;
-		},
-
-		login: function(name){
-			$cookies.putObject('user',{
-				logged: true,
-				name: name
-			});
-		},
-
-		logout: function(){
-			$cookies.remove('user');
-		}
+chatio.factory('backBtnService', function($log){
+	var f = false;
+	return function(val){
+		if (val != undefined) this.f = val;
+		else return this.f;
 	}
 });
+
+chatio.factory('auth', function(){
+	var user;
+	return function(val){
+		if (val != undefined) this.user = val;
+		else return JSON.parse(this.user);
+	}
+})
