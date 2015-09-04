@@ -16,6 +16,7 @@ mongoose.connect('mongodb://kochetov_dd:ms17081981ntv@ds035633.mongolab.com:3563
 
 var User = require('./models/user');
 var Message = require('./models/message');
+var Room = require('./models/room');
 
 passport.serializeUser(function(user, done) {
   done(null, user.id);
@@ -45,10 +46,10 @@ passport.use(new LocalStrategy({
   }
 ));
 
-
-var root = require('./routes/root');
 var index = require('./routes/index');
 var chat = require('./routes/chat');
+var rooms = require('./routes/rooms');
+var apis = require('./routes/apis');
 
 var app = express();
 
@@ -59,7 +60,7 @@ app.set('view engine', 'jade');
 
 // uncomment after placing your favicon in /public
 //app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
-app.use(logger('dev'));
+//app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
@@ -75,9 +76,11 @@ app.use(validator());
 app.use(passport.initialize());
 app.use(passport.session());
 
-app.use('/', root);
-app.use('/index', index);
+app.use('/', index);
+app.use('/', apis);
 app.use('/chat', chat);
+app.use('/rooms', rooms);
+
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -114,11 +117,12 @@ var server = require('http').createServer(app);
 var io = require('socket.io').listen(server);
 server.listen(app.get('port'));
 
-usernames = [];
+//usernames = [];
+usersInRoom = {};
 
-function getHistory(callback)
+function getHistory(room, callback)
 {
-  Message.find({}, function(err, messages){
+  Message.find({room: room}, function(err, messages){
     callback(messages);
   });
 }
@@ -132,72 +136,109 @@ function addMessage(msg, callback)
   });
 }
 
-function clearHistory(callback)
+function clearHistory(room, username, callback)
 {
-  Message.remove({}, function(err){
-    if (err) return console.log(err);
-    console.log('history cleared');
-    callback();
+  User.findOne({username: username}, function(err, user){
+    if (err) throw console.log(err);
+    if (user.rank < 3) return console.log(username + ' tried to clear history but had no permission');
+    Message.remove({room: room}, function(err){
+      if (err) return console.log(err);
+      console.log('history cleared');
+      callback();
+    });
   });
 }
 
 io.sockets.on('connection', function(socket){
 
-  console.log('new connection');
-
   //When user logins or refreshes the pages
   socket.on('new user', function(data){
-    if (!data.callback) data.callback = function(){};
-    if (usernames.indexOf(data.username) != -1) data.callback(false);
-    else
+    socket.join(data.room);
+    socket.room = data.room;
+    socket.username = data.username;
+    var sockets = io.sockets.connected;
+    var f = 0;
+    for (var cur in sockets)
     {
-      socket.username = data.username;
-      if (usernames.indexOf(data.username) == -1) usernames.push(socket.username);
-      updateUsernames();
-
-      //Drop connection on other pages where this user is logged
-      socket.broadcast.emit('kick', {
-        name: socket.username,
-        reason: 'Duplicate login'
-      });
-
-      data.callback(true);
-      console.log('User "' + socket.username + '" joined.');
+      cur = sockets[cur];
+      if (cur.username == data.username && cur.room == data.room) ++f;
     }
+    if (f == 1)
+    {
+      if (!usersInRoom[socket.room]) usersInRoom[socket.room] = 1;
+       else ++usersInRoom[socket.room];
+    }
+    //if (usernames.indexOf(socket.username) == -1) usernames.push(socket.username);
+    updateUsernames();
+
+    console.log('User "' + socket.username + '" joined.');
   });
 
   //Update usernames list
   socket.on('update usernames', function(){
-    updateUsernames();
+    updateUsernames(socket.room);
   });
 
-  function updateUsernames()
+  function updateUsernames(room)
   {
-    io.sockets.emit('usernames', usernames);
+    var sockets = io.sockets.connected;
+    var usernames = [];
+    for (var cur in sockets)
+    {
+      cur = sockets[cur];
+      if (cur.room != room) continue;
+      if (usernames.indexOf(cur.username) == -1) usernames.push(cur.username);
+    }
+    io.to(room).emit('usernames', usernames);
+  }
+
+  function updateHistory(room)
+  {
+    getHistory(room, function(messages){
+      io.to(room).emit('history', messages);
+    });
   }
 
   //Returns messages list
-  socket.on('get history', function(callback){
-    getHistory(function(messages){
-      callback(messages);
+  socket.on('get history', function(){
+    getHistory(socket.room, function(messages){
+      socket.emit('history', messages);
     });
   });
 
   //Send message
-  socket.on('send message', function(data){
-    //console.log(socket.username + ': ' + data);
+  socket.on('send message', function(text){
     var msg = {
-      text: data,
+      text: text,
+      room: socket.room,
       time: Date.now(),
       username: socket.username
     };
     addMessage(msg, function(){
-      io.sockets.emit('new message', msg);
+      io.to(socket.room).emit('new message', msg);
     });
   });
 
   socket.on('clear history', function(callback){
-    clearHistory(callback);
+    clearHistory(socket.room, socket.username, function(){
+      updateHistory(socket.room);
+      callback();
+    });
+  });
+
+  socket.on('get rooms', function(callback){
+    Room.find({}, function(err, rooms){
+      if (err) return console.log(err);
+      var _rooms = [];
+      for (var room in rooms)
+      {
+        room = rooms[room];
+        room['online'] = usersInRoom[room._id] ? usersInRoom[room._id] : 0;
+        _rooms.push(room);
+      }
+      rooms = _rooms;
+      callback(rooms);
+    });
   });
 
   //Disconnect
@@ -215,13 +256,14 @@ io.sockets.on('connection', function(socket){
     var f = 0;
     var sockets = io.sockets.connected;
     for (var cur in sockets)
-      if (sockets[cur].username == socket.username)
+      if (sockets[cur].room == socket.room && sockets[cur].username == socket.username)
         ++f;
     if (f > 0) return;
-    if (usernames.indexOf(socket.username) != -1) usernames.splice(usernames.indexOf(socket.username), 1);
-    updateUsernames();
-    console.log('User "' + socket.username + '" disconnected.');
+    --usersInRoom[socket.room];
+    updateUsernames(socket.room);
+    console.log('User "' + socket.username + '" disconnected from room "' + socket.room + '".');
   }
 
 });
+
 module.exports = app;

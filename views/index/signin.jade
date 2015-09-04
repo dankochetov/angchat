@@ -1,20 +1,17 @@
 extends layout
 
-block content
-	include backBtn
-	if errors.length > 0
-		br
-		br
-		ul.alert.alert-danger
-			each error in errors
-				li.list-unstyled
-					.glyphicon.glyphicon-remove-circle
-					=' '+error.msg
-	h2 Logging in
-	form(method='post', action='index/signin')
-		.form-group
-			input.form-control(type='text', name='login', placeholder='Login')
-		.form-group
-			input.form-control(type='password', name='password', placeholder='Password')
-		.form-group
-			button.btn.btn-success.form-control(type='submit') Sign In
+block content2
+	.panel.panel-default
+		.panel-heading
+			h2 Logging in
+				.pull-right
+					include backBtn
+		.panel-body
+			include ../errors
+			form(method='post', action='/signin')
+				.form-group
+					input.form-control(type='text', name='login', placeholder='Login')
+				.form-group
+					input.form-control(type='password', name='password', placeholder='Password')
+				.form-group
+					button.btn.btn-success.form-control(type='submit') Sign In

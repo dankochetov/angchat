@@ -1,28 +1,25 @@
 extends layout
 
-block content
-	include backBtn
-	if errors.length > 0
-		br
-		br
-		ul.alert.alert-danger
-			each error in errors
-				li.list-unstyled
-					.glyphicon.glyphicon-remove-circle
-					=' '+error.msg
-	h2 Registration
-	form(method='post', action='index/signup')
-		.form-group
-			label Login
-			input.form-control(type='text', name='login', value='#{login}')
-		.form-group
-			label Username (will be visible, login is used by default)
-			input.form-control(type='text', name='username', value='#{username}')
-		.form-group
-			label Password
-			input.form-control(type='password', name='password')
-		.form-group
-			label Re-enter the password
-			input.form-control(type='password', name='password2')
-		.form-group
-			button.btn.btn-info.form-control(type='submit') Sign Up
+block content2
+	.panel.panel-default
+		.panel-heading
+			h2 Registration
+				.pull-right
+					include backBtn
+		.panel-body
+			include ../errors
+			form(method='post', action='/signup')
+				.form-group
+					label Login
+					input.form-control(type='text', name='login', value='#{login}')
+				.form-group
+					label Username (will be visible, login is used by default)
+					input.form-control(type='text', name='username', value='#{username}')
+				.form-group
+					label Password
+					input.form-control(type='password', name='password')
+				.form-group
+					label Re-enter the password
+					input.form-control(type='password', name='password2')
+				.form-group
+					button.btn.btn-info.form-control(type='submit') Sign Up

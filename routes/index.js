@@ -9,11 +9,14 @@ var User = require('../models/user');
 
 /* GET home page. */
 router.get('/', function(req, res, next){
-  res.redirect('/');
+  res.render('index/default', {
+  	service: 'index'
+  });
 });
 
 router.get('/signin', function(req, res, next){
 	res.render('index/signin', {
+		service: 'index',
 		errors: req.flash('errors')
 	});
 });
@@ -27,23 +30,24 @@ router.post('/signin', function(req, res, next){
 	if (errors)
 	{
 		req.flash('errors', errors);
-		return res.redirect('/#/signin');
+		return res.redirect('/signin');
 	}
 
 	passport.authenticate('local', function(err, user, info){
 		if (info) req.flash('errors', {msg: info.error});
 		if (err) return next(err);
 		if (!user)
-			return res.redirect('/#/signin');
+			return res.redirect('/signin');
 		req.logIn(user, function(err){
 			if (err) return next(err);
-			return res.redirect('/chat');
+			return res.redirect('/rooms');
 		});
 	})(req, res, next);
 });
 
 router.get('/signup', function(req, res, next){
 	res.render('index/signup', {
+		service: 'index',
 		errors: req.flash('errors'),
 		login: req.flash('login'),
 		username: req.flash('username')
@@ -76,8 +80,8 @@ router.post('/signup', function(req, res, next){
 			req.flash('login', login);
 			req.flash('username', username2);
 			req.flash('errors', errors);
-			res.location('/#/signup');
-			res.redirect('/#/signup');
+			res.location('/signup');
+			res.redirect('/signup');
 		}
 
 		else
@@ -94,14 +98,9 @@ router.post('/signup', function(req, res, next){
 	});
 });
 
-router.get('/index', function(req, res, next){
-	res.render('index/index');
-});
-
 router.get('/logout', function(req, res, next){
-	if (req.isAuthenticated())
-		req.logout();
-	return res.redirect('/#/');
+	req.logout();
+	return res.redirect('/');
 });
 
 module.exports = router;

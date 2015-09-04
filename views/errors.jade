@@ -1,0 +1,6 @@
+if errors.length > 0
+				ul.alert.alert-danger
+					each error in errors
+						li.list-unstyled
+							.glyphicon.glyphicon-remove-circle
+							=' '+error.msg

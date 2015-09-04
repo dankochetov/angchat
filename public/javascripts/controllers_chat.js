@@ -1,24 +1,63 @@
-chatio.controller('chatDefaultCtrl', function($scope, $location, $sce, $filter, auth){
+chatio.controller('chatDefaultCtrl', function($scope, $http, $timeout, $location, $q){
 
 	$scope.usernames = [];
 	$scope.messages = [];
 	$scope.scrollGlue = true;
-
-
-	$scope.init = function(){
-		$scope.user = auth();
-
-		socket.emit('new user', {username: $scope.user.username});
-
-		socket.emit('get history', function(data){
+	var room = $q.defer();
+	$http.get(window.location + '/getroom').then(function(res){
+		if (res.data == '404')
+		{
+			$timeout(function(){
+				$scope.hide = true;
+			}, 0);
+			window.location = '/rooms';
+		}
+		else
+			$timeout(function(){
+				room.resolve(res.data);
+				$scope.room = res.data;
+			}, 0);
+	});
+	$http.get('/getuser').then(function(res){
+		$timeout(function(){
 			$scope.$apply(function(){
-				$scope.messages = data;
-				$scope.scrollGlue = true;
+				$scope.user = res.data;
+			});
+			room.promise.then(function(){
+				socket.emit('new user', {username: $scope.user.username, room: $scope.room._id});
+				socket.emit('update usernames');
+				socket.emit('get history');
+			});
+		}, 0);
+	});
+
+	function addServerMessage(text, type)
+	{
+		$scope.$apply(function(){
+			$scope.messages.push({
+				username: 'server',
+				text: text,
+				type: type,
+				time: Date.now()
 			});
 		});
-		
-		socket.emit('update usernames');
 	}
+
+	socket.on('reconnect', function(){
+		socket.emit('new user', {username: $scope.user.username, room: $scope.room._id});
+		addServerMessage('Connection restored', 'info');
+	});
+
+	socket.on('disconnect', function(){
+		addServerMessage('Connection lost', 'error');
+	});
+
+	socket.on('history', function(data){
+		$scope.$apply(function(){
+			$scope.messages = data;
+			$scope.scrollGlue = true;
+		});
+	});
 
 	$scope.clearChat = function(){
 		socket.emit('clear history', function(){
@@ -32,16 +71,6 @@ chatio.controller('chatDefaultCtrl', function($scope, $location, $sce, $filter, 
 		if ($scope.messageForm.$invalid) return;
 		socket.emit('send message', msg);
 		$scope.msg = '';
-	}
-
-	$scope.formatMessage = function(message){
-		if (message.type == 'error')
-			res = '<div class="alert alert-danger">' + message.text + '</div>';
-		else
-			res = '<small>' + $filter('date')(message.time, '[HH:mm:ss] ') + '</small>'
-				+ '<strong>' + message.username + ': </strong>'
-				+ message.text;
-		return $sce.trustAsHtml(res);
 	}
 
 	socket.on('usernames', function(data){
@@ -60,23 +89,4 @@ chatio.controller('chatDefaultCtrl', function($scope, $location, $sce, $filter, 
 	socket.on('kick', function(data){
 		if (data.name == $scope.username) kick(data.reason);
 	});
-
-	function kick(reason)
-	{
-		socket.emit('logout');
-
-		$scope.$apply(function(){
-			$scope.messages.push({
-				username: 'server',
-				type: 'error',
-				text: 'You have been kicked (' + reason + ')'
-			});
-		});
-	}
-
-	$scope.checkScrollGlue = function(){
-		var res = $scope.scrollGlue;
-		if (res) $scope.scrollGlue = false;
-		return res;
-	}
 });

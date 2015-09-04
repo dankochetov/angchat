@@ -13,13 +13,9 @@ html(ng-app='chatio')
 		script(src='/javascripts/angular-cookies.min.js')
 		script(src='/javascripts/angular-resource.min.js')
 		script(src='/javascripts/angular-sanitize.min.js')
-		script(src='javascripts/scrollglue.js')
-		script(src='javascripts/chatio.js')
-		script(src='javascripts/routes_#{service}.js')
-		script(src='javascripts/services.js')
-		script(src='javascripts/controllers.js')
-		script(src='javascripts/controllers_#{service}.js')
+		script(src='/javascripts/scrollglue.js')
+		script(src='/javascripts/chatio.js')
+		script(src='/javascripts/controllers_#{service}.js')
 	body
-		div(ng-controller='initCtrl', ng-init='init(\'#{JSON.stringify(user)}\')')
 		.container-fluid
 			block content
