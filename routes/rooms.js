@@ -24,6 +24,8 @@ router.get('/create', function(req, res, next){
 
 router.post('/create', function(req, res, next){
 
+	var sockets = require('../sockets')(req.app.locals.io);
+
 	var name = req.body.name;
 	var description = req.body.description;
 	var protect = req.body.protect;
@@ -64,12 +66,19 @@ router.post('/create', function(req, res, next){
 			});
 			room.save(function(err){
 				if (err) return next(err);
+				sockets.updateRooms();
 				Room.findOne({name: name}, function(err, room){
 					if (err) next(err);
 					return res.redirect('/rooms/' + room.id);
 				});
 			});
 		}
+	});
+});
+
+router.get('/my', function(req, res, next){
+	res.render('rooms/my', {
+		service: 'rooms'
 	});
 });
 

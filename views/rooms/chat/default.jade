@@ -19,7 +19,7 @@ block content3
 											ul.dropdown-menu(aria-labelledby='optionsMenu')
 												li: a(href='', ng-click='clearChat()', ng-show='user.rank > 2') Clear chat
 												li.divider(role='separator', ng-show='user.rank > 2')
-												li: a(href='/rooms') Leave room
+												li: a(href='/rooms') Change room
 												li: a(href='/logout') Logout
 						.panel-body
 							#chatWindow(scroll-glue-bottom='scrollGlue')
@@ -33,14 +33,14 @@ block content3
 							form#messageForm(ng-submit='submit(msg)', novalidate, name='messageForm')
 								.form-group
 									.input-group
-										input.form-control#message(size=35, placeholder='Write message...', ng-model='msg', required, ng-change='scrollGlue=false')
+										input.form-control#message(size=35, placeholder='Write message...', ng-model='msg', required, ng-change='scrollGlue=false', autocomplete='off')
 										.input-group-btn
 											button.btn.btn-info(type='submit') Send
 			.col-md-2.col-xs-4
 				#userWrapper
 					.panel.panel-default
 						.panel-heading
-							.text-center Online
+							.text-center In this room
 						.panel-body
 							#users
 								ul.list-unstyled

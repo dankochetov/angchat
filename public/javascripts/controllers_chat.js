@@ -1,4 +1,4 @@
-chatio.controller('chatDefaultCtrl', function($scope, $http, $timeout, $location, $q){
+chatio.controller('chatDefaultCtrl', function($scope, $http, $timeout, $location, $q, autoSync){
 
 	$scope.usernames = [];
 	$scope.messages = [];
@@ -86,7 +86,4 @@ chatio.controller('chatDefaultCtrl', function($scope, $http, $timeout, $location
 		});
 	});
 
-	socket.on('kick', function(data){
-		if (data.name == $scope.username) kick(data.reason);
-	});
 });

@@ -8,13 +8,16 @@ var passport = require('passport');
 var User = require('../models/user');
 
 /* GET home page. */
+
 router.get('/', function(req, res, next){
-  res.render('index/default', {
-  	service: 'index'
-  });
+	if (req.isAuthenticated()) return res.redirect('/rooms');
+	res.render('index/default', {
+		service: 'index'
+	});
 });
 
 router.get('/signin', function(req, res, next){
+	if (req.isAuthenticated()) return res.redirect('/rooms');
 	res.render('index/signin', {
 		service: 'index',
 		errors: req.flash('errors')
@@ -40,12 +43,15 @@ router.post('/signin', function(req, res, next){
 			return res.redirect('/signin');
 		req.logIn(user, function(err){
 			if (err) return next(err);
+			var sockets = require('../sockets')(req.app.locals.io);
+			sockets.login(req.body.login);
 			return res.redirect('/rooms');
 		});
 	})(req, res, next);
 });
 
 router.get('/signup', function(req, res, next){
+	if (req.isAuthenticated()) return res.redirect('/rooms');
 	res.render('index/signup', {
 		service: 'index',
 		errors: req.flash('errors'),
@@ -99,6 +105,8 @@ router.post('/signup', function(req, res, next){
 });
 
 router.get('/logout', function(req, res, next){
+	var sockets = require('../sockets')(req.app.locals.io);
+	sockets.logout(req.user.login);
 	req.logout();
 	return res.redirect('/');
 });

@@ -8,13 +8,15 @@ block content2
 					include backBtn
 		.panel-body
 			include ../errors
-			form(method='post', action='/signup')
+			form(method='post', action='/signup', name='signupForm' autocomplete='off')
+				input.hidden
+				input.hidden(type='password')
 				.form-group
 					label Login
-					input.form-control(type='text', name='login', value='#{login}')
+					input.form-control(type='text', name='login', value='#{login}', ng-model='login')
 				.form-group
 					label Username (will be visible, login is used by default)
-					input.form-control(type='text', name='username', value='#{username}')
+					input.form-control(type='text', name='username', value='#{username}', placeholder='{{login}}')
 				.form-group
 					label Password
 					input.form-control(type='password', name='password')

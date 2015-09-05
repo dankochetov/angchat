@@ -11,10 +11,7 @@ var RoomSchema = new mongoose.Schema({
   protect: Boolean,
   password: String,
   owner: String,
-  users: [{
-  	login: String,
-  	rank: Number
-  }],
+  users: mongoose.Schema.Types.Mixed,
   online: {
   	type: Number,
   	default: 0

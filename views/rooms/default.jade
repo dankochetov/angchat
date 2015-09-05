@@ -5,13 +5,14 @@ block content2
 		.col-sm-8.col-sm-offset-2.col-xs-12
 			.panel.panel-default
 				.panel-heading
-					h2 Rooms
+					h2 Rooms 
+						a.btn.btn-default(href='/rooms/create') Create room
 						.dropdown.pull-right
 							.button.btn.btn-default.dropdown-toggle(id='optionsMenu', data-toggle='dropdown', aria-haspopup='true', aria-expanded='true')
 								|Options
 								.span.caret
 							ul.dropdown-menu(aria-labelledby='optionsMenu')
-								li: a(href='rooms/create') Create room
+								li: a(href='/rooms/my') My rooms
 								li.divider(role='separator')
 								li: a(href='/logout') Logout
 				.panel-body(ng-show='rooms.length==0')
@@ -37,4 +38,4 @@ block content2
 										button.btn.btn-success(ng-click='enterRoom(room)') &rsaquo;
 						td {{room.description}}
 						td {{room.owner}}
-						td {{room.online}}
+						td.text-center {{room.online}}

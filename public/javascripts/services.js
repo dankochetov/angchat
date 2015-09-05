@@ -1,15 +1,15 @@
-chatio.factory('backBtnService', function($log){
-	var f = false;
-	return function(val){
-		if (val != undefined) this.f = val;
-		else return this.f;
-	}
-});
+chatio.factory('autoSync', function($http){
+	socket.on('logout', function(data){
+		$http.get('/getuser').then(function(response){
+			if (response.data == '401') location.reload();
+		});
+	});
 
-chatio.factory('auth', function(){
-	var user;
-	return function(val){
-		if (val != undefined) this.user = val;
-		else return JSON.parse(this.user);
-	}
-})
+	socket.on('login', function(data){
+		$http.get('/getuser').then(function(response){
+			if (response.data != '401') location.reload();
+		});
+	});
+
+	return {}
+});
