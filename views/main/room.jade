@@ -23,6 +23,6 @@ script(type='text/ng-template', id='passwordModal')
 	form#messageForm(ng-submit='submit(msg)', novalidate, name='messageForm')
 		.form-group
 			.input-group
-				input.form-control#message(size=35, placeholder='Write message...', ng-model='msg', required, ng-change='scrollGlue=false', autocomplete='off')
+				input.form-control#message(size=35, placeholder='Write message...', ng-model='msg', required, ng-change='scrollGlue=false', autocomplete='off' autofocus)
 				.input-group-btn
 					button.btn.btn-info(type='submit') Send

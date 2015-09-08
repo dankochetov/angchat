@@ -120,3 +120,7 @@ body {
 #tabs li.ng-enter-active, #tabs li {
 	max-width: 100%;
 }
+
+#users li {
+	white-space: nowrap;
+}
