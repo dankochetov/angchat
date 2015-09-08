@@ -67,8 +67,7 @@ passport.use(new VkontakteStrategy({
   callbackURL: '/signin/vk/cb',
   apiVersion: '5.37'
 }, function(accessToken, refreshToken, profile, done){
-  console.log(JSON.stringify(profile));
-  User.findOrCreate({login: profile.id, facebook: true}, function(err, user, created){
+  User.findOrCreate({login: profile.id, username: profile.displayName, vkontakte: true}, function(err, user, created){
     return done(err, user);
   });
 }));

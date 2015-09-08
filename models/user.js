@@ -19,6 +19,10 @@ var UserSchema = new mongoose.Schema({
   facebook: {
     type: Boolean,
     default: false
+  },
+  vkontakte: {
+    type: Boolean,
+    default: false
   }
 });
 

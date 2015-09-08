@@ -6,8 +6,11 @@ chatio.controller('indexDefaultCtrl', function($scope, autoSync){
 	}
 
 	$scope.vk_login = function(){
-		VK.init(function(){
-			window.location = '/signin/vk';
-		}, function(){}, '5.37');
+		VK.init({
+			apiId: '5062854'
+		});
+		VK.Auth.login(function(response){
+			if (response.session) window.location = '/signin/vk';
+		});
 	}
 });
