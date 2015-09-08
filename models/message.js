@@ -12,4 +12,6 @@ var MessageSchema = new mongoose.Schema({
   room: String
 });
 
+MessageSchema.plugin(require('mongoose-findorcreate'));
+
 var Message = module.exports = mongoose.model('messages', MessageSchema);

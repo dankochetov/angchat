@@ -11,14 +11,17 @@ var UserSchema = new mongoose.Schema({
   username: {
     type: String
   },
-  password: {
-    type: String,
-    required: true
-  },
+  password: String,
   rank: {
     type: Number,
     default: 1
+  },
+  facebook: {
+    type: Boolean,
+    default: false
   }
 });
+
+UserSchema.plugin(require('mongoose-findorcreate'));
 
 var User = module.exports = mongoose.model('users', UserSchema);

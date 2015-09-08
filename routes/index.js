@@ -24,6 +24,18 @@ router.get('/signin', function(req, res, next){
 	});
 });
 
+router.get('/signin/fb', passport.authenticate('facebook'));
+
+router.get('/signin/fb/cb', passport.authenticate('facebook', {failureRedirect: '/'}), function(req, res, next){
+	res.redirect('/main#');
+});
+
+router.get('/signin/vk', passport.authenticate('vkontakte'));
+
+router.get('/signin/vk/cb', passport.authenticate('vkontakte', {failureRedirect: '/'}), function(req, res, next){
+	res.redirect('/main#');
+});
+
 router.post('/signin', function(req, res, next){
 	req.checkBody('login', 'Login field is empty!').notEmpty();
 	req.checkBody('password', 'Password field is empty!').notEmpty();
@@ -105,9 +117,12 @@ router.post('/signup', function(req, res, next){
 });
 
 router.get('/logout', function(req, res, next){
-	var sockets = require('../sockets')(req.app.locals.io);
-	sockets.logout(req.user.login);
-	req.logout();
+	if (req.user)
+	{
+		var sockets = require('../sockets')(req.app.locals.io);
+		sockets.logout(req.user.login);
+		req.logout();
+	}
 	return res.redirect('/');
 });
 

@@ -21,4 +21,6 @@ var RoomSchema = new mongoose.Schema({
   }
 });
 
+RoomSchema.plugin(require('mongoose-findorcreate'));
+
 var Room = module.exports = mongoose.model('rooms', RoomSchema);

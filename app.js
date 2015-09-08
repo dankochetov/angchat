@@ -7,6 +7,8 @@ var bodyParser = require('body-parser');
 var session = require('express-session');
 var passport = require('passport');
 var LocalStrategy = require('passport-local').Strategy;
+var FacebookStrategy = require('passport-facebook').Strategy;
+var VkontakteStrategy = require('passport-vkontakte').Strategy;
 var bcrypt = require('bcrypt-nodejs');
 var flash = require('connect-flash');
 var validator = require('express-validator');
@@ -45,6 +47,31 @@ passport.use(new LocalStrategy({
     });
   }
 ));
+
+passport.use(new FacebookStrategy({
+  clientID: '480228708804223',
+  clientSecret: '3aa575d92af323a2f766e95a07762f07',
+  callbackURL: '/signin/fb/cb',
+  enableProof: false,
+  profileFields: ['displayName']
+},
+function(accessToken, refreshToken, profile, done){
+  User.findOrCreate({login: profile.id, username: profile.displayName, facebook: true}, function(err, user, created){
+    return done(err, user);
+  });
+}));
+
+passport.use(new VkontakteStrategy({
+  clientID: '5062854',
+  clientSecret: 'us5ZrVTD8BUP1vL6TZ4Z',
+  callbackURL: '/signin/vk/cb',
+  apiVersion: '5.37'
+}, function(accessToken, refreshToken, profile, done){
+  console.log(JSON.stringify(profile));
+  User.findOrCreate({login: profile.id, facebook: true}, function(err, user, created){
+    return done(err, user);
+  });
+}));
 
 var index = require('./routes/index');
 var main = require('./routes/main');
