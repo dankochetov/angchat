@@ -1,4 +1,4 @@
-chatio.controller('roomsCtrl', function($scope, $rootScope, $http){
+chatio.controller('roomsCtrl', function($scope, $rootScope, $timeout, $http){
 
 	var socket = $scope.socket = $rootScope.sockets['rooms'];
 
@@ -8,17 +8,18 @@ chatio.controller('roomsCtrl', function($scope, $rootScope, $http){
 	$scope.error = [];
 	$scope.loading = true;
 
-	$scope.tryJoinRoom = function(room){
-		if (!room.protect) window.location = '#/' + room._id;
-		else $scope.showForm[room._id] = !$scope.showForm[room._id];
-	}
-
 	socket.emit('get rooms');
 
 	socket.on('rooms', function(data){
 		$scope.loading = false;
 		$scope.$apply(function(){
 			$scope.rooms = data;
+			$timeout(function(){
+				//Tooltips
+				jQuery(function(){
+				  jQuery('[data-toggle="tooltip"]').tooltip();
+				});
+			}, 0);
 		});
 	});
 });

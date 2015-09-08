@@ -1,3 +1,16 @@
+script(type='text/ng-template', id='passwordModal')
+	.modal-header
+		h3 {{room.name}}
+	.modal-body
+		form(ng-submit='$close(password)', id='passwordModalForm')
+			input.hidden
+			input.hidden(type='password')
+			label Enter password for this room:
+			input.form-control#passwordModalInput(type='password', ng-model='password')
+	.modal-footer
+		button.btn.btn-info(type='submit', form='passwordModalForm') Enter
+		button.btn.btn-warning(ng-click='$dismiss()') Cancel
+
 .container-fluid
 	#chatWindow(scroll-glue-bottom='scrollGlue')
 		.row

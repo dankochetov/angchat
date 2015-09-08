@@ -5,28 +5,7 @@ block content
 	script(src='/javascripts/controllers_main.js')
 	#mainWrapper(ng-cloak, ng-controller='mainCtrl')
 		.row
-			div(ng-class='{"col-md-6 col-md-offset-2 col-xs-8": $root.isRoom, "col-md-8 col-md-offset-2 col-xs-12": !$root.isRoom}')
-				#chatWrapper
-					.panel.panel-default
-						.panel-heading
-								.row
-									.col-xs-11
-										ul.nav.nav-pills#tabs(role='tablist')
-											li(ng-repeat='cur in $root.sockets', ng-class='{active: $root.room._id==cur.room._id}')
-												a(href='#/{{cur.room._id}}') {{cur.room.name}}
-									.col-xs-1
-										.dropdown.pull-right
-											.button.btn.btn-default.dropdown-toggle(id='optionsMenu', data-toggle='dropdown', aria-haspopup='true', aria-expanded='true')
-												|Options
-												.span.caret
-											ul.dropdown-menu(aria-labelledby='optionsMenu')
-												li: a(href='', ng-click='clearChat()', ng-show='user.rank > 2 && $root.isRoom') Clear chat
-												li.divider(role='separator', ng-show='user.rank > 2 && $root.isRoom')
-												li: a(href='', ng-click='leave($root.room._id)', ng-show='$root.isRoom') Leave room
-												li: a(href='/myrooms') My rooms
-												li: a(href='/logout') Logout
-						ng-view
-			.col-md-2.col-xs-4
+			div(ng-class='{"col-md-2 col-xs-4": $root.isRoom, "hidden": !$root.isRoom}')
 				#userWrapper(ng-show='$root.isRoom')
 					.panel.panel-default
 						.panel-heading
@@ -35,4 +14,27 @@ block content
 							#users
 								ul.list-unstyled
 									li(ng-repeat='username in usernames') {{username}}
+			.col-md-7.col-xs-8(ng-class='{"col-md-offset-2": !$root.isRoom}')
+				#chatWrapper
+					.panel.panel-default
+						.panel-heading
+								.row
+									#tabs-list
+										.col-xs-8.col-sm-11
+											.nav.nav-pills#tabs(role='tablist')
+												li(ng-repeat='cur in $root.sockets', ng-class='{active: $root.room._id==cur.room._id}')
+													a(href='#/{{cur.room._id}}') {{cur.room.name}}
+														.badge {{cur.room.unread==0?'':cur.room.unread}}
+									.col-xs-4.col-sm-1
+										.dropdown.pull-right
+											.button.btn.btn-default.dropdown-toggle(id='optionsMenu', data-toggle='dropdown', aria-haspopup='true', aria-expanded='true')
+												|Options 
+												.span.caret
+											ul.dropdown-menu(aria-labelledby='optionsMenu')
+												li: a(href='', ng-click='clearChat()', ng-show='user.rank > 2 && $root.isRoom') Clear chat
+												li.divider(role='separator', ng-show='user.rank > 2 && $root.isRoom')
+												li: a(href='', ng-click='leave($root.room._id)', ng-show='$root.isRoom') Leave room
+												li: a(href='/myrooms') My rooms
+												li: a(href='/logout') Logout
+						ng-view
 		include ../popups

@@ -1,5 +1,6 @@
 .panel-body(ng-show='rooms.length==0')
-	div.text-center(ng-show='!loading') No rooms yet
+	div.text-center(ng-show='!loading') No rooms yet. 
+		a.btn.btn-default(href='/myrooms/create') Create room
 	div.text-center(ng-show='loading') Loading rooms...
 table.table.table-bordered.table-hover.table-responsive(ng-show='rooms.length>0')
 	tr.info
@@ -9,16 +10,9 @@ table.table.table-bordered.table-hover.table-responsive(ng-show='rooms.length>0'
 		th.col-xs-1 Online
 	tr(ng-repeat='room in rooms | orderBy: "-online"')
 		td
-			a(href='', ng-click='tryJoinRoom(room)' title='Join this room') {{room.name}}
+			a(href='#/{{room._id}}', title='Join this room') {{room.name}}
 			| 
-			.glyphicon.glyphicon-lock(ng-show='room.protect', title='This room is protected with password')
-			form(ng-show='showForm[room._id] && room.protect', method='post', action='{{"/rooms/"+room._id}}')
-				input.hidden(type='text')
-				input.hidden(type='password')
-				.input-group
-					input.form-control(type='password', placeholder='Enter password')
-					.input-group-btn
-						button.btn.btn-success(type='submit') &rsaquo;
+			.glyphicon.glyphicon-lock(ng-show='room.protect', data-toggle='tooltip', title='This room is protected with password')
 		td {{room.description}}
 		td {{room.owner}}
 		td.text-center {{room.online}}

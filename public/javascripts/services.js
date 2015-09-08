@@ -9,7 +9,7 @@ chatio.factory('autoSync', function($http){
 
 	socket.on('login', function(data){
 		$http.get('/getuser').then(function(response){
-			if (response.data != '401') location.reload();
+			if (response.data == '401') location.reload();
 		});
 	});
 

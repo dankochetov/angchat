@@ -10,6 +10,18 @@ chatio.config(function($routeProvider){
 		}
 	});
 
+	$routeProvider.when('/user/:user', {
+		templateUrl: function(params){
+			return '/main/user/' + params.user;
+		},
+		controller: 'roomCtrl',
+		resolve: {
+			factory: function($rootScope){
+				$rootScope.isRoom = false;
+			}
+		}
+	});
+
 	$routeProvider.when('/:room', {
 		templateUrl: function(params){
 			return '/main/' + params.room;

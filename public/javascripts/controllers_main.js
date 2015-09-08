@@ -14,4 +14,10 @@ chatio.controller('mainCtrl', function($scope, $rootScope, $routeParams, autoSyn
 	}
 	else socket = $rootScope.sockets['rooms'];
 
+	$scope.$on('usernames', function(event, data){
+		$scope.$apply(function(){
+			$scope.usernames = data;
+		});
+	});
+
 });
