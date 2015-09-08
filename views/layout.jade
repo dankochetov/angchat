@@ -12,12 +12,15 @@ html(ng-app='chatio')
 		script(src='/javascripts/angular-route.min.js')
 		script(src='/javascripts/angular-cookies.min.js')
 		script(src='/javascripts/angular-resource.min.js')
-		script(src='/javascripts/angular-sanitize.min.js')
+		script(src='/javascripts/angular-animate.min.js')
 		script(src='/javascripts/scrollglue.js')
 		script(src='/javascripts/chatio.js')
 		script(src='/javascripts/services.js')
 		script(src='/javascripts/filters.js')
-		script(src='/javascripts/controllers_#{service}.js')
+		script(src='/javascripts/controllers_index.js')
+		script(src='/javascripts/controllers_rooms.js')
+		script(src='/javascripts/controllers_myrooms.js')
+		script(src='/javascripts/controllers_room.js')
 	body
 		.container-fluid
 			block content

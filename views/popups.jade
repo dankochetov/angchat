@@ -1,0 +1,7 @@
+.popup-list
+		.popup(ng-repeat='popup in popups.slice().reverse()')
+			.head(ng-show='popup.username')
+				.username {{popup.username}}
+				|  said to you:
+			.body
+				.text(ng-show='popup.text') {{popup.text}}

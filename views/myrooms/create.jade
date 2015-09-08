@@ -1,0 +1,32 @@
+extends ../layout
+
+block content
+	.row
+		.col-sm-6.col-sm-offset-3.col-xs-12
+			.panel.panel-default
+				.panel-heading
+					h2 Create room
+						.pull-right
+							include backBtn_create
+				.panel-body
+					include ../errors
+					form(method='post', action='/myrooms/create', autocomplete='off')
+						input.hidden(type='text')
+						input.hidden(type='password')
+						.form-group
+							label Name
+							input.form-control(type='text', name='name')
+						.form-group
+							label Description
+							textarea.form-control(name='description')
+						.checkbox
+							label
+								input(type='checkbox', name='protect', ng-model='protect')
+								|Protect room with password
+						.form-group(ng-show='protect')
+							label Password
+							input.form-control(type='password', name='password')
+						.form-group
+							.row
+								.col-xs-12.col-md-4.col-md-offset-4
+									button.btn.btn-success.form-control(type='submit') Create

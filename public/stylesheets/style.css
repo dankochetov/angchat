@@ -43,3 +43,79 @@ body {
 .msg-server .time, .msg-server .username {
 	display: none;
 }
+
+.popup-list {
+	z-index: 9999;
+	position: fixed;
+	right: 0;
+	bottom: 0;
+	top: auto;
+	left: auto;
+}
+
+.popup-list .popup {
+	background-color: rgba(0, 0, 0, 0.5);
+	border-radius: 10px;
+	margin: 20px;
+	padding: 20px;
+	color: white;
+}
+
+.popup .body {
+	width: 300px;
+	min-height: 25px;
+	max-height: 100px;
+	overflow-y: auto;
+	overflow-x: hidden;
+	word-wrap: break-word;
+}
+
+.popup .head {
+	display: block;
+}
+
+.popup .username {
+	font-weight: bold;
+	display: inline;
+}
+
+.popup {
+	position: relative;
+}
+.popup.ng-enter, .popup.ng-leave.ng-leave-active {
+	transition: 0.25s linear all;
+    opacity: 0;
+    top: 25px;
+}
+.popup.ng-enter-active, .popup.ng-leave {
+	transition: 0.25s linear all;
+	opacity: 1;
+    top: 0;
+}
+
+.popup:hover {
+	background-color: rgba(0, 0, 0, 0.7);
+}
+
+#tabs {
+	width: 100%;
+}
+
+#tabs li a {
+	white-space: nowrap;
+	height: 30px;
+	display: block;
+	padding: 5px;
+	font-size: small;
+	border-radius: 3px;
+	text-align: center;
+}
+
+#tabs li.ng-enter {
+	max-width: 0;
+	transition: 0.5s linear;
+}
+
+#tabs li.ng-enter-active, #tabs li {
+	max-width: 100%;
+}

@@ -9,6 +9,7 @@ module.exports = function(io){
   function init()
   {
     io.sockets.on('connection', function(socket){
+      console.log('new connection');
       //When user logins or refreshes the pages
       socket.on('new user', function(data){
         socket.join(data.room);
@@ -19,6 +20,7 @@ module.exports = function(io){
         for (var cur in sockets)
         {
           cur = sockets[cur];
+          console.log(cur.username + ' ' + cur.room);
           if (cur.username == data.username && cur.room == data.room) ++f;
         }
         if (f == 1)
@@ -26,13 +28,12 @@ module.exports = function(io){
           if (!usersInRoom[socket.room]) usersInRoom[socket.room] = 1;
            else ++usersInRoom[socket.room];
         }
-        //if (usernames.indexOf(socket.username) == -1) usernames.push(socket.username);
         updateUsernames(socket.room);
         updateRooms();
 
         Room.findById(socket.room, function(err, room){
           if (err) return next(err);
-          console.log('User "' + socket.username + '" joined the room "' + room.name + '".');
+          if (room) console.log('User "' + socket.username + '" joined the room "' + room.name + '".');
         });
         
       });
@@ -75,15 +76,24 @@ module.exports = function(io){
 
       socket.on('delete room', function(id){
         if (!usersInRoom[id] || usersInRoom[id] == 0)
-          Room.findById(id)
-          .remove(function(err){
+        {
+          Room.findById(id).remove(function(err){
             if (err) console.log(err);
             updateRooms();
           });
+          Message.find({room: id}).remove(function(err){
+            if (err) console.log(err);
+          });
+        }
+      });
+
+      socket.on('comment', function(data){
+        console.log(data);
       });
 
       //Disconnect
       socket.on('disconnect', function(){
+        console.log('disconnected');
         disconnect(socket);
       });
 

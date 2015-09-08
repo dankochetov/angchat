@@ -10,14 +10,14 @@ var User = require('../models/user');
 /* GET home page. */
 
 router.get('/', function(req, res, next){
-	if (req.isAuthenticated()) return res.redirect('/rooms');
+	if (req.isAuthenticated()) return res.redirect('/main');
 	res.render('index/default', {
 		service: 'index'
 	});
 });
 
 router.get('/signin', function(req, res, next){
-	if (req.isAuthenticated()) return res.redirect('/rooms');
+	if (req.isAuthenticated()) return res.redirect('/main');
 	res.render('index/signin', {
 		service: 'index',
 		errors: req.flash('errors')
@@ -45,13 +45,13 @@ router.post('/signin', function(req, res, next){
 			if (err) return next(err);
 			var sockets = require('../sockets')(req.app.locals.io);
 			sockets.login(req.body.login);
-			return res.redirect('/rooms');
+			return res.redirect('/main');
 		});
 	})(req, res, next);
 });
 
 router.get('/signup', function(req, res, next){
-	if (req.isAuthenticated()) return res.redirect('/rooms');
+	if (req.isAuthenticated()) return res.redirect('/main');
 	res.render('index/signup', {
 		service: 'index',
 		errors: req.flash('errors'),
@@ -97,7 +97,7 @@ router.post('/signup', function(req, res, next){
 				if (err) return next(err);
 				req.logIn(user, function(err){
 					if (err) return next(err);
-					res.redirect('/chat');
+					res.redirect('/main');
 				});
 			});
 		}

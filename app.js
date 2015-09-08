@@ -47,9 +47,10 @@ passport.use(new LocalStrategy({
 ));
 
 var index = require('./routes/index');
-var chat = require('./routes/chat');
-var rooms = require('./routes/rooms');
-var apis = require('./routes/apis');
+var main = require('./routes/main');
+var getuser = require('./routes/api/getuser');
+var getroom = require('./routes/api/getroom');
+var myrooms = require('./routes/myrooms');
 
 var app = express();
 
@@ -77,10 +78,10 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 app.use('/', index);
-app.use('/', apis);
-app.use('/chat', chat);
-app.use('/rooms', rooms);
-
+app.use('/', getroom);
+app.use('/getuser', getuser);
+app.use('/main', main);
+app.use('/myrooms', myrooms);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -95,6 +96,7 @@ app.use(function(req, res, next) {
 // will print stacktrace
 if (app.get('env') === 'development') {
   app.use(function(err, req, res, next) {
+    console.log('ERROR AT ' + req.originalUrl);
     res.status(err.status || 500);
     res.render('error', {
       message: err.message,
