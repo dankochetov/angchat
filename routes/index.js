@@ -86,6 +86,7 @@ router.post('/signup', function(req, res, next){
 	password = bcrypt.hashSync(password);
 
 	var err = {};
+	console.log('here');
 	User.findOne({login: login}, function(err, user){
 		if (err) next(err);
 		var errors = req.validationErrors();

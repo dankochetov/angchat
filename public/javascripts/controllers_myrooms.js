@@ -16,7 +16,7 @@ chatio.controller('myroomsCtrl', function($scope, $http, $timeout, $filter){
 	socket.on('rooms', function(data){
 		$scope.loading = false;
 		$scope.$apply(function(){
-			$scope.rooms = $filter('onlyMy')(data, $scope.user.login);
+			$scope.rooms = $filter('onlyMy')(data, $scope.user._id);
 		});
 	});
 

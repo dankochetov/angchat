@@ -1,9 +1,9 @@
 extends layout
 
 block content2
-	.panel.panel-default
+	.panel.panel-default#login
 		.panel-heading
-			h2 Registration
+			h3 Registration
 				.pull-right
 					include backBtn
 		.panel-body
@@ -23,5 +23,7 @@ block content2
 				.form-group
 					label Re-enter the password
 					input.form-control(type='password', name='password2')
-				.form-group
-					button.btn.btn-info.form-control(type='submit') Sign Up
+				.row
+					.col-sm-6.col-sm-offset-3
+						.form-group
+							button.btn.btn-login.form-control(type='submit') Sign Up

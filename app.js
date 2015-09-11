@@ -14,7 +14,8 @@ var flash = require('connect-flash');
 var validator = require('express-validator');
 var mongo = require('mongodb');
 var mongoose = require('mongoose');
-mongoose.connect('mongodb://kochetov_dd:ms17081981ntv@ds035633.mongolab.com:35633/chatio');
+//mongoose.connect('mongodb://kochetov_dd:ms17081981ntv@ds035633.mongolab.com:35633/chatio');
+mongoose.connect('mongodb://localhost/chatio');
 
 var User = require('./models/user');
 var Message = require('./models/message');

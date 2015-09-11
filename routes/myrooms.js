@@ -59,8 +59,8 @@ router.post('/create', function(req, res, next){
 				description: description,
 				protect: protect,
 				password: password,
-				owner: req.user.username,
-				users: JSON.parse('{"' + req.user.login + '": 4}')
+				owner: req.user._id,
+				users: JSON.parse('{"' + req.user._id + '": 4}')
 			});
 			room.save(function(err){
 				if (err) return next(err);

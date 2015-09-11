@@ -14,7 +14,7 @@ chatio.config(function($routeProvider){
 		templateUrl: function(params){
 			return '/main/user/' + params.user;
 		},
-		controller: 'roomCtrl',
+		controller: 'privateCtrl',
 		resolve: {
 			factory: function($rootScope){
 				$rootScope.isRoom = false;

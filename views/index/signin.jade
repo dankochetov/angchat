@@ -1,17 +1,23 @@
 extends layout
 
 block content2
-	.panel.panel-default
+	.panel.panel-default#login
 		.panel-heading
-			h2 Logging in
+			h3 Logging in
 				.pull-right
 					include backBtn
 		.panel-body
 			include ../errors
 			form(method='post', action='/signin')
+				.row
+					.col-sm-6.col-sm-offset-3
+						.form-group
+							input.form-control(type='text', name='login', placeholder='Login')
 				.form-group
-					input.form-control(type='text', name='login', placeholder='Login')
+					.row
+						.col-sm-6.col-sm-offset-3
+							input.form-control(type='password', name='password', placeholder='Password')
 				.form-group
-					input.form-control(type='password', name='password', placeholder='Password')
-				.form-group
-					button.btn.btn-success.form-control(type='submit') Sign In
+					.row
+						.col-sm-6.col-sm-offset-3
+							button.btn.btn-login.form-control(type='submit') Sign in

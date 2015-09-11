@@ -9,6 +9,7 @@ chatio.controller('roomCtrl', function($scope, $rootScope, $http, $timeout, $loc
 	$scope.usernames = [];
 	$scope.messages = [];
 	$scope.scrollGlue = true;
+	$scope.user = $rootScope.user;
 
 	$http.get('/main/' + $routeParams.room + '/getroom').then(function(res){
 		if (res.data == '404')
@@ -20,35 +21,23 @@ chatio.controller('roomCtrl', function($scope, $rootScope, $http, $timeout, $loc
 		}
 		else
 			$timeout(function(){
-				room = res.data;
+				$scope.room = $rootScope.room = room = res.data;
 				roomInit.resolve();
-				$scope.room = $rootScope.room = res.data;
 			}, 0);
 	});
-	$http.get('/getuser').then(function(res){
-		$timeout(function(){
-			$scope.$apply(function(){
-				$scope.user = $rootScope.user = res.data;
-			});
-			roomInit.promise.then(function(){
-				if (!$rootScope.sockets || !$rootScope.sockets[$scope.room._id])
-					showPasswordModal(room.protect, function(){
-						socket = io.connect({forceNew: true});
-						socket.emit('comment', 'socket opened for ' + $scope.room._id);
-						socket.emit('new user', {username: $scope.user.username, room: $scope.room._id});
-						socket.user = $scope.user;
-						socket.room = $scope.room;
-						$scope.sockets[$scope.room._id] = socket;
-						socket.emit('update usernames');
-					});
-				socket = $rootScope.sockets[$scope.room._id];
-				socket.user.rank = $rootScope.user.rank = Math.max(socket.user.rank, socket.room.users[socket.user.login]?socket.room.users[socket.user.login]:0);
+	roomInit.promise.then(function(){
+		if (!$rootScope.sockets || !$rootScope.sockets[$scope.room._id])
+			showPasswordModal(room.protect, function(){
+				socket = io.connect({forceNew: true});
+				socket.emit('comment', 'socket opened for ' + $scope.room._id);
+				socket.emit('new user', {user: $scope.user, room: $scope.room});
+				socket.user = $scope.user;
+				socket.room = $scope.room;
+				$scope.sockets[$scope.room._id] = socket;
+				socket.emit('update usernames');
 				socketInit.resolve();
-				socket.room.unread = 0;
-				socketInit.resolve();
-				socket.emit('get history');
 			});
-		}, 0);
+		else socketInit.resolve();
 	});
 
 	function showPasswordModal(show, callback)
@@ -65,12 +54,6 @@ chatio.controller('roomCtrl', function($scope, $rootScope, $http, $timeout, $loc
 			}
 		});
 
-		passwordModal.opened.then(function(){
-			$timeout(function(){
-				jQuery('#passwordModalInput').focus();
-			}, 200);
-		});
-
 		passwordModal.result.then(function(password){
 			if (password != room.password) showPasswordModal(show, callback);
 			else if (callback) callback();
@@ -81,6 +64,11 @@ chatio.controller('roomCtrl', function($scope, $rootScope, $http, $timeout, $loc
 	}
 
 	socketInit.promise.then(function(){
+
+		socket = $rootScope.sockets[$scope.room._id];
+		socket.user.rank = $rootScope.user.rank = Math.max(socket.user.rank, socket.room.users[socket.user._id]?socket.room.users[socket.user._id]:0);
+		socket.unread = 0;
+		socket.emit('get history');
 
 		socket.on('reconnect', function(){
 			location.reload();
@@ -97,14 +85,14 @@ chatio.controller('roomCtrl', function($scope, $rootScope, $http, $timeout, $loc
 			});
 		});
 
-		socket.on('usernames', function(data){
-			$scope.$emit('usernames', data);
+		socket.on('users', function(data){
+			$scope.$emit('users', data);
 		});
 
 		socket.on('new message', function(data){
 			if ($rootScope.room._id != $scope.room._id)
 				$rootScope.$apply(function(){
-					++$rootScope.sockets[data.room].room.unread;
+					++$rootScope.sockets[data.room].unread;
 				});
 			$scope.$apply(function(){
 				$scope.messages.push(data);
@@ -148,7 +136,6 @@ chatio.controller('roomCtrl', function($scope, $rootScope, $http, $timeout, $loc
 		}
 		$location.url($rootScope.sockets[prev].room._id);
 		delete $rootScope.sockets[id];
-
 	}
 
 	$scope.submit = function(msg){

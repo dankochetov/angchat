@@ -6,7 +6,7 @@ script(type='text/ng-template', id='passwordModal')
 			input.hidden
 			input.hidden(type='password')
 			label Enter password for this room:
-			input.form-control#passwordModalInput(type='password', ng-model='password')
+			input.form-control#passwordModalInput(type='password', ng-model='password', autofocus)
 	.modal-footer
 		button.btn.btn-info(type='submit', form='passwordModalForm') Enter
 		button.btn.btn-warning(ng-click='$dismiss()') Cancel

@@ -9,7 +9,8 @@ var UserSchema = new mongoose.Schema({
     required: true
   },
   username: {
-    type: String
+    type: String,
+    required: true
   },
   password: String,
   rank: {
@@ -23,6 +24,10 @@ var UserSchema = new mongoose.Schema({
   vkontakte: {
     type: Boolean,
     default: false
+  },
+  friends: {
+    type: [String],
+    default: []
   }
 });
 

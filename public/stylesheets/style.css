@@ -124,3 +124,63 @@ body {
 #users li {
 	white-space: nowrap;
 }
+
+img.signin {
+	margin-left: 5px;
+}
+
+.panel#login.panel-default, .panel#login .panel-body, .panel#login .panel-heading, .panel#login .btn, .panel#login input[type='text'], .panel#login input[type='button'], .panel#login button, .panel#login input[type='submit'], .panel#login input[type='password'], .panel#login a.btn {
+	border-radius: 30px !important;
+}
+
+.panel#login .panel-heading {
+	border-bottom-left-radius: 0 !important;
+	border-bottom-right-radius: 0 !important;
+}
+
+.panel#login h3 {
+	margin-top: 10px !important;
+	margin-bottom: 5px !important;
+}
+
+.panel#login .panel-heading {
+	background-color: #748783;
+	color: white;
+}
+
+.userlist-item {
+	cursor: pointer;
+	outline: none;
+	display: block;
+	white-space: nowrap;
+	overflow: hidden;
+}
+
+.userlist-item .caret {
+	display: none;
+}
+
+.userlist-item:hover .caret {
+	display: inline-block;
+}
+
+.popover .arrow {
+	display: none !important;
+}
+
+.popover, .popover-inner, .popover-content {
+	background: rgba(0, 0, 0, 0) !important;
+	padding: 0px !important;
+	margin: 0!important;
+	border: none !important;
+	box-shadow: none !important;
+}
+
+.you {
+	color: gray;
+	display: inline;
+}
+
+.you:after {
+	content: ' (you)';
+}

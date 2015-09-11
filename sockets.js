@@ -1,6 +1,7 @@
 var User = require('./models/user');
 var Message = require('./models/message');
 var Room = require('./models/room');
+var Promise = require('promise');
 
 module.exports = function(io){
 
@@ -12,40 +13,44 @@ module.exports = function(io){
       console.log('new connection');
       //When user logins or refreshes the pages
       socket.on('new user', function(data){
-        socket.join(data.room);
+        socket.join(data.room._id);
         socket.room = data.room;
-        socket.username = data.username;
+        socket.user = data.user;
         var sockets = io.sockets.connected;
         var f = 0;
         for (var cur in sockets)
         {
           cur = sockets[cur];
-          console.log(cur.username + ' ' + cur.room);
-          if (cur.username == data.username && cur.room == data.room) ++f;
+          if (!cur.user) continue;
+          if (cur.user._id == data.user._id && cur.room._id == data.room._id) ++f;
         }
         if (f == 1)
         {
-          if (!usersInRoom[socket.room]) usersInRoom[socket.room] = 1;
-           else ++usersInRoom[socket.room];
+          if (!usersInRoom[socket.room]) usersInRoom[socket.room._id] = 1;
+           else ++usersInRoom[socket.room._id];
         }
-        updateUsernames(socket.room);
+        updateUsers(socket.room._id);
         updateRooms();
 
-        Room.findById(socket.room, function(err, room){
-          if (err) return next(err);
-          if (room) console.log('User "' + socket.username + '" joined the room "' + room.name + '".');
+        Room.findById(socket.room._id, function(err, room){
+          if (err) return console.log(err);
+          if (room) console.log('User "' + socket.user.username + '" joined the room "' + room.name + '".');
+          else User.findById(socket.room._id, function(err, user){
+            if (err) return console.log(err);
+            if (user) console.log('User "' + socket.user.username + '" joined the private chat with "' + user.username + '".');
+          });
         });
         
       });
 
       //Update usernames list
       socket.on('update usernames', function(){
-        updateUsernames(socket.room);
+        updateUsers(socket.room._id);
       });
 
       //Returns messages list
       socket.on('get history', function(){
-        getHistory(socket.room, function(messages){
+        getHistory(socket.room._id, function(messages){
           socket.emit('history', messages);
         });
       });
@@ -54,18 +59,40 @@ module.exports = function(io){
       socket.on('send message', function(text){
         var msg = {
           text: text,
-          room: socket.room,
+          room: socket.room._id,
           time: Date.now(),
-          username: socket.username
+          username: socket.user.username
         };
         addMessage(msg, function(){
-          io.to(socket.room).emit('new message', msg);
+          io.to(socket.room._id).emit('new message', msg);
+        });
+      });
+
+      socket.on('send private message', function(text){
+        var msg = {
+          text: text,
+          room: socket.room._id,
+          time: Date.now(),
+          username: socket.user.username
+        };
+        addMessage(msg, function(){
+          var sockets = io.sockets.connected;
+          for(var cur in sockets)
+          {
+            cur = sockets[cur];
+            if (!cur.user) continue;
+            if (cur.user._id == socket.room._id)
+            {
+              io.to(cur.id).emit('new message', msg);
+              return;
+            }
+          }
         });
       });
 
       socket.on('clear history', function(callback){
-        clearHistory(socket.room, socket.username, function(){
-          updateHistory(socket.room);
+        clearHistory(socket.room._id, socket.user._id, function(){
+          updateHistory(socket.room._id);
           callback();
         });
       });
@@ -91,6 +118,46 @@ module.exports = function(io){
         console.log(data);
       });
 
+      socket.on('get friends', function(userid){
+        updateFriends(socket, userid);
+      });
+
+      socket.on('add friend', function(data){
+        console.log('user: ' + data.userid + ' friend: ' + friend.id);
+        User.findById(data.userid, function(err, user){
+          if (err) return console.log(err);
+          if (user)
+          {
+            user.friends.push(data.friendid);
+            user.save(function(err){
+              if (err) console.log(err);
+              updateFriends(socket, data.userid);
+            });
+          }
+        });
+      });
+
+      socket.on('remove friend', function(data){
+        User.findById(data.userid, function(err, user){
+          if (err) return console.log(err);
+          if (user)
+          {
+            user.friends.splice(user.friends.indexOf(data.friendid), 1);
+            user.save(function(err){
+              if (err) return console.log(err);
+              updateFriends(socket, data.userid);
+            });
+          }
+        });
+      });
+
+      socket.on('get user', function(id){
+        User.findById(id, function(err, user){
+          if (err) return console.log(err);
+          if (user) socket.emit('user', user);
+        });
+      });
+
       //Disconnect
       socket.on('disconnect', function(){
         console.log('disconnected');
@@ -100,7 +167,7 @@ module.exports = function(io){
     });
   }
 
-  function updateRooms(my, login, socket)
+  function updateRooms()
   {
     Room.find({}, function(err, rooms){
       if (err) return console.log(err);
@@ -128,46 +195,53 @@ module.exports = function(io){
 
   function disconnect(socket)
   {
-    if (!socket.username) return;
+    if (!socket.user) return;
     var f = 0;
     var sockets = io.sockets.connected;
     for (var cur in sockets)
-      if (sockets[cur].room == socket.room && sockets[cur].username == socket.username)
+    {
+      if (!sockets[cur].user) continue;
+      if (sockets[cur].room._id == socket.room._id && sockets[cur].user._id == socket.user._id)
         ++f;
+    }
     if (f > 0) return;
-    --usersInRoom[socket.room];
-    updateUsernames(socket.room);
+    --usersInRoom[socket.room._id];
+    updateUsers(socket.room._id);
     updateRooms();
 
-    Room.findById(socket.room, function(err, room){
-      if (err) return next(err);
-      console.log('User "' + socket.username + '" disconnected from the room "' + room.name + '".');
+    Room.findById(socket.room._id, function(err, room){
+      if (err) return console.log(err);
+      if (room) console.log('User "' + socket.user.username + '" disconnected from the room "' + room.name + '".');
+      else User.findById(socket.room._id, function(err, user){
+        if (err) return console.log(err);
+        if (user) console.log('User "' + socket.user.username + '" disconnected from the private chat with "' + user.username + '".');
+      });
     });
   }
 
-  function updateUsernames(room)
+  function updateUsers(id)
   {
     var sockets = io.sockets.connected;
-    var usernames = [];
+    var users = [];
     for (var cur in sockets)
     {
       cur = sockets[cur];
-      if (cur.room != room) continue;
-      if (usernames.indexOf(cur.username) == -1) usernames.push(cur.username);
+      if (!cur.user || cur.room._id != id) continue;
+      if (users.indexOf(cur.user) == -1) users.push(cur.user);
     }
-    io.to(room).emit('usernames', usernames);
+    io.to(id).emit('users', users);
   }
 
-  function updateHistory(room)
+  function updateHistory(roomid)
   {
-    getHistory(room, function(messages){
-      io.to(room).emit('history', messages);
+    getHistory(roomid, function(messages){
+      io.to(roomid).emit('history', messages);
     });
   }
 
-  function getHistory(room, callback)
+  function getHistory(roomid, callback)
   {
-    Message.find({room: room}, function(err, messages){
+    Message.find({room: roomid}, function(err, messages){
       callback(messages);
     });
   }
@@ -181,16 +255,34 @@ module.exports = function(io){
     });
   }
 
-  function clearHistory(room, username, callback)
+  function clearHistory(roomid, userid, callback)
   {
-    User.findOne({username: username}, function(err, user){
+    User.findById(userid, function(err, user){
       if (err) throw console.log(err);
-      if (user.rank < 3) return console.log(username + ' tried to clear history but had no permission');
-      Message.remove({room: room}, function(err){
+      var rank = user.rank;
+      Room.findById(roomid, function(err, room){
         if (err) return console.log(err);
-        console.log('history cleared');
-        callback();
+        if (room && room.users[user._id]) rank = Math.max(rank, room.users[user._id]);
+        if (rank < 3) return console.log(user.username + ' tried to clear history but had no permission');
+        Message.remove({room: roomid}, function(err){
+          if (err) return console.log(err);
+          console.log('history cleared');
+          callback();
+        });
       });
+    });
+  }
+
+  function updateFriends(socket, userid){
+    User.findById(userid, function(err, user){
+      if (err) return console.log(err);
+      if (user)
+      {
+        User.find({_id: {$in: user.friends}}, function(err, friends){
+          if (err) return console.log(err);
+          if (friends) socket.emit('friends', friends);
+        });
+      }
     });
   }
 

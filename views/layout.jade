@@ -4,7 +4,9 @@ html(ng-app='chatio')
 		meta(name='viewport', content='width=device-width, initial-scale=1')
 		title ChatIO
 		link(rel='stylesheet', href='/stylesheets/style.css')
+		link(rel='stylesheet', href='/stylesheets/input-addon.css')
 		link(rel='stylesheet', href='/stylesheets/bootstrap.min.css')
+		link(rel='stylesheet', href='/stylesheets/animate-animo.min.css')
 		script(src='/socket.io/socket.io.js')
 		script(src='/javascripts/angular.min.js')
 		script(src='/javascripts/angular-route.min.js')
@@ -23,9 +25,11 @@ html(ng-app='chatio')
 		script(src='/javascripts/controllers_myrooms.js')
 		script(src='/javascripts/controllers_modals.js')
 		script(src='/javascripts/controllers_room.js')
+		script(src='/javascripts/controllers_private.js')
 		script(src='/javascripts/jquery/bootstrap.js')
 		script(src='/javascripts/fb_sdk.js')
 		script(src='//vk.com/js/api/openapi.js')
+		script(src='/javascripts/animo.min.js')
 	body
-		.container-fluid
+		.container
 			block content

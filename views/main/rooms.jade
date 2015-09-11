@@ -8,11 +8,11 @@ table.table.table-bordered.table-hover.table-responsive(ng-show='rooms.length>0'
 		th.col-xs-6 Description
 		th.col-xs-2 Owner
 		th.col-xs-1 Online
-	tr(ng-repeat='room in rooms | orderBy: "-online"')
+	tr(ng-repeat='room in rooms | orderBy: "-online"' action-on-finish)
 		td
 			a(href='#/{{room._id}}', title='Join this room') {{room.name}}
 			| 
 			.glyphicon.glyphicon-lock(ng-show='room.protect', data-toggle='tooltip', title='This room is protected with password')
 		td {{room.description}}
-		td {{room.owner}}
+		td(ng-init='getUser(room.owner)') {{users[room.owner].username}}
 		td.text-center {{room.online}}
