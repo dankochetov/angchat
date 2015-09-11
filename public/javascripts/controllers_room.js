@@ -1,15 +1,13 @@
-chatio.controller('roomCtrl', function($scope, $rootScope, $http, $timeout, $location, $routeParams, $q, $modal, popup){
+chatio.controller('roomCtrl', function($scope, $rootScope, $http, $timeout, $location, $routeParams, $q, $modal){
 
 	var room;
-	var roomInit = $q.defer();
 
 	var socket;
-	var socketInit = $q.defer();
 
 	$scope.usernames = [];
 	$scope.messages = [];
 	$scope.scrollGlue = true;
-	$scope.user = $rootScope.user;
+	var user = $scope.user = $rootScope.user;
 
 	$http.get('/main/' + $routeParams.room + '/getroom').then(function(res){
 		if (res.data == '404')
@@ -22,23 +20,25 @@ chatio.controller('roomCtrl', function($scope, $rootScope, $http, $timeout, $loc
 		else
 			$timeout(function(){
 				$scope.room = $rootScope.room = room = res.data;
-				roomInit.resolve();
+				roomInit();
 			}, 0);
 	});
-	roomInit.promise.then(function(){
-		if (!$rootScope.sockets || !$rootScope.sockets[$scope.room._id])
+	function roomInit()
+	{
+		if (!$rootScope.sockets || !$rootScope.sockets[room._id])
 			showPasswordModal(room.protect, function(){
 				socket = io.connect({forceNew: true});
-				socket.emit('comment', 'socket opened for ' + $scope.room._id);
-				socket.emit('new user', {user: $scope.user, room: $scope.room});
-				socket.user = $scope.user;
-				socket.room = $scope.room;
-				$scope.sockets[$scope.room._id] = socket;
+				socket.emit('comment', 'socket opened for ' + room._id);
+				socket.emit('new user', {user: $scope.user, room: room});
+				socket.user = user;
+				socket.room = room;
+				socket.private = false;
 				socket.emit('update usernames');
-				socketInit.resolve();
+				$rootScope.sockets[room._id] = socket;
+				socketInit();
 			});
-		else socketInit.resolve();
-	});
+		else socketInit();
+	}
 
 	function showPasswordModal(show, callback)
 	{
@@ -63,12 +63,17 @@ chatio.controller('roomCtrl', function($scope, $rootScope, $http, $timeout, $loc
 		});
 	}
 
-	socketInit.promise.then(function(){
-
-		socket = $rootScope.sockets[$scope.room._id];
-		socket.user.rank = $rootScope.user.rank = Math.max(socket.user.rank, socket.room.users[socket.user._id]?socket.room.users[socket.user._id]:0);
+	function socketInit()
+	{
+		socket = $rootScope.sockets[room._id];
+		socket.user.rank = $rootScope.user.rank = Math.max(socket.user.rank, room.users[user._id]?room.users[user._id]:0);
 		socket.unread = 0;
+
+		$rootScope.sockets[$scope.room._id] = socket;
+
 		socket.emit('get history');
+
+		socket.off();
 
 		socket.on('reconnect', function(){
 			location.reload();
@@ -79,7 +84,7 @@ chatio.controller('roomCtrl', function($scope, $rootScope, $http, $timeout, $loc
 		});
 
 		socket.on('history', function(data){
-			$scope.$apply(function(){
+			$timeout(function(){
 				$scope.messages = data;
 				$scope.scrollGlue = true;
 			});
@@ -94,13 +99,13 @@ chatio.controller('roomCtrl', function($scope, $rootScope, $http, $timeout, $loc
 				$rootScope.$apply(function(){
 					++$rootScope.sockets[data.room].unread;
 				});
-			$scope.$apply(function(){
+			$timeout(function(){
 				$scope.messages.push(data);
 				$scope.scrollGlue = true;
-			});
+			}, 0);
 		});
 
-	});
+	}
 
 
 	function addServerMessage(text, type)
@@ -117,15 +122,14 @@ chatio.controller('roomCtrl', function($scope, $rootScope, $http, $timeout, $loc
 
 	$rootScope.clearChat = function(){
 		socket.emit('clear history', function(){
-			$scope.$apply(function(){
+			$timeout(function(){
 				$scope.messages = [];
-			});
+			}, 0);
 		});
 	}
 
 	$rootScope.leave = function(id)
 	{
-		var socket = $rootScope.sockets[id];
 		socket.off('disconnect');
 		socket.disconnect();
 		var prev;
@@ -143,13 +147,5 @@ chatio.controller('roomCtrl', function($scope, $rootScope, $http, $timeout, $loc
 		socket.emit('send message', msg);
 		$scope.msg = '';
 	}
-
-	$scope.popups = popup.popups;
-	$timeout(function(){
-		popup.add({
-			username: 'kochetov_dd',
-			text: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque in ultrices arcu. Pellentesque sed elit cursus, ullamcorper lectus id, feugiat urna. Proin molestie luctus sem, at laoreet tellus fermentum vitae. Nulla cursus suscipit odio ac efficitur. Pellentesque vestibulum, eros ut rhoncus dapibus, enim est eleifend mauris, at tempus mi arcu in sapien. Sed nec iaculis lacus. Mauris varius ornare massa eget convallis. Phasellus sem eros, lobortis tristique augue et, sollicitudin iaculis nulla.'
-		});
-	}, 1000);
 
 });

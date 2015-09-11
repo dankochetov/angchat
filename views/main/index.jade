@@ -29,9 +29,11 @@ block content
 								#tabs-list
 									.col-xs-8.col-md-11
 										.nav.nav-pills#tabs(role='tablist')
-											li(ng-repeat='cur in $root.sockets', ng-class='{active: $root.room._id==(cur.room?cur.room._id:cur.companion._id)}')
-												a(href='#/{{cur.room?cur.room._id:"user/"+cur.companion._id}}') {{cur.room?cur.room.name:cur.companion.username}}
-													.badge {{cur.unread==0?'':cur.unread}}
+											li(ng-repeat='cur in $root.sockets', ng-class='{active: checkActiveTab(cur)}')
+												a(href='#/{{(cur.private?"user/":"")+cur.room._id}}')
+													.glyphicon.glyphicon-user(ng-show='cur.private')
+													|{{cur.private?cur.room.username:cur.room.name}}
+													.badge(ng-show='cur.unread>0') {{'+'+cur.unread}}
 								.col-xs-4.col-md-1
 									.dropdown.pull-right
 										.button.btn.btn-default.dropdown-toggle(id='optionsMenu', data-toggle='dropdown', aria-haspopup='true', aria-expanded='true')
@@ -40,7 +42,7 @@ block content
 										ul.dropdown-menu(aria-labelledby='optionsMenu')
 											li: a(href='', ng-click='clearChat()', ng-show='$root.user.rank > 2 && $root.isRoom') Clear chat
 											li.divider(role='separator', ng-show='$root.user.rank > 2 && $root.isRoom')
-											li: a(href='', ng-click='leave($root.room._id)', ng-show='$root.isRoom') Close tab
+											li: a(href='', ng-click='leave($root.room._id)', ng-show='countTabs()>1&&$root.room._id!="/"') Close tab
 											li: a(href='/myrooms') My rooms
 											li: a(href='/logout') Logout
 						ng-view
@@ -56,10 +58,10 @@ block content
 							br
 							ul.list-unstyled
 								.dropdown
-									li.userlist-item.dropdown-toggle(data-toggle='dropdown', aria-haspopup='true', aria-expanded='true', ng-click='setSelection(friend)', ng-repeat='friend in friends | filter: filterFriends') {{friend.username}}
+									li.userlist-item.dropdown-toggle(data-toggle='dropdown', aria-haspopup='true', aria-expanded='true', ng-click='setSelection(friend)', ng-repeat-start='friend in friends | filter: filterFriends') {{friend.username}}
 										.caret
-									ul.dropdown-menu
-										li: a(href='#/user/{{user._id}}') Private chat
+									ul.dropdown-menu(ng-repeat-end)
+										li: a(href='#/user/{{friend._id}}') Private chat
 										li: a(href='', ng-click='removeFriend()') Remove from friends
 						.text-center(ng-show='friends.length==0') You have no friends yet.
 		include ../popups

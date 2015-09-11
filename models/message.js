@@ -5,11 +5,13 @@ var MessageSchema = new mongoose.Schema({
   username: String,
   text: String,
   time: Date,
-  type: {
-  	type: String,
-  	default: 'message'
+  private: {
+  	type: Boolean,
+  	default: false
   },
-  room: String
+  room: String,
+  from: String,
+  to: String
 });
 
 MessageSchema.plugin(require('mongoose-findorcreate'));

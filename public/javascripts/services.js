@@ -18,15 +18,22 @@ chatio.factory('autoSync', function($http){
 
 chatio.factory('popup', function($timeout){
 
-	var popups = [];
+	var list = [];
 
 	return {
 		add: function(msg){
-			popups.push(msg);
 			$timeout(function(){
-				popups.splice(0, 1);
-			}, 5000);
+				var time = 0;
+				if (list.length > 5)
+				{
+					list.splice(0, 1);
+					time = 300;
+				}
+				$timeout(function(){
+					list.push(msg);
+				}, time);
+			});
 		},
-		popups: popups
+		list: list
 	}
 });

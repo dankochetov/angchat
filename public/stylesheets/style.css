@@ -53,17 +53,24 @@ body {
 	left: auto;
 }
 
-.popup-list .popup {
+.popup {
 	background-color: rgba(0, 0, 0, 0.5);
 	border-radius: 10px;
 	margin: 20px;
-	padding: 20px;
+	min-height: 100px;
+}
+
+.popup a, .popup a:hover, .popup a:active, .popup a:visited {
 	color: white;
+	text-decoration: none;
+}
+
+.popup-inner {
+	padding: 20px;
 }
 
 .popup .body {
 	width: 300px;
-	min-height: 25px;
 	max-height: 100px;
 	overflow-y: auto;
 	overflow-x: hidden;
@@ -97,6 +104,13 @@ body {
 	background-color: rgba(0, 0, 0, 0.7);
 }
 
+.popup .close-button {
+	position: absolute;
+	left: auto;
+	right: 0;
+	margin: 10px;
+}
+
 
 #tabs {
 	width: 100%;
@@ -119,6 +133,10 @@ body {
 
 #tabs li.ng-enter-active, #tabs li {
 	max-width: 100%;
+}
+
+#tabs .glyphicon {
+	margin-right: 3px;
 }
 
 #users li {

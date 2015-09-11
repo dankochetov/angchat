@@ -1,9 +1,10 @@
-chatio.controller('mainCtrl', function($scope, $rootScope, $routeParams, $http, $q, autoSync){
+chatio.controller('mainCtrl', function($scope, $rootScope, $routeParams, $http, $q, autoSync, popup){
 
 	var userInit = $q.defer();
+	var user;
 
 	$http.get('/getuser').then(function(response){
-		$rootScope.user = $scope.user = response.data;
+		$rootScope.user = user = $scope.user = response.data;
 		userInit.resolve();
 	});
 
@@ -14,6 +15,7 @@ chatio.controller('mainCtrl', function($scope, $rootScope, $routeParams, $http, 
 		var socket = io.connect({forceNew: true});
 		socket.emit('comment', 'socked opened for Rooms');
 		socket.room = {_id: '/', name: 'Rooms'};
+		socket.private = false;
 
 		$rootScope.room = socket.room;
 		if (!$rootScope.sockets) $rootScope.sockets = {};
@@ -53,5 +55,25 @@ chatio.controller('mainCtrl', function($scope, $rootScope, $routeParams, $http, 
 	$scope.removeFriend = function(){
 		socket.emit('remove friend', {userid: $scope.user._id, friendid: $scope.selected._id});
 	}
+
+	$scope.checkActiveTab = function(cur){
+		return $rootScope.room._id == cur.room._id;
+	}
+
+	$scope.countTabs = function(){
+		var count = 0;
+		for (cur in $rootScope.sockets) ++count;
+			return count;
+	}
+
+	$rootScope.popups = popup.list;
+
+	var privateSocket = io.connect({forceNew: true});
+	privateSocket.emit('comment', 'socket opened for private messages listening');
+	privateSocket.emit('register listener');
+	privateSocket.on('new private message', function(data){
+		if (data.to != user._id || $rootScope.room._id == data.from) return;
+		popup.add(data);
+	});
 
 });

@@ -1,37 +1,43 @@
-chatio.controller('privateCtrl', function($scope, $routeParams, $timeout, $q, $rootScope, popup, autoSync){
+chatio.controller('privateCtrl', function($scope, $routeParams, $timeout, $q, $rootScope, $location, autoSync){
 
 	var socket;
-	var socketInit = $q.defer();
+	var user;
+	var companion = {};
 
 	$scope.messages = [];
 	$scope.scrollGlue = true;
-	$scope.user = $rootScope.user;
+	$scope.user = user = $rootScope.user;
 	$scope.companion = {};
-	$scope.companion._id = $rootScope.room._id = $routeParams.user;
+	companion._id = $routeParams.user;
 
-	if (!$rootScope.sockets || !$rootScope.sockets[$scope.user._id])
+	if (!$rootScope.sockets || !$rootScope.sockets[companion._id])
 	{
 		socket = io.connect({forceNew: true});
-		socket.emit('comment', 'socket opened for private with ' + $scope.companion._id);
-		socket.emit('new user', {user: $scope.user, room: $scope.companion});
-		socket.emit('get user', $scope.companion._id);
+		socket.emit('comment', 'socket opened for private with ' + companion._id);
+		socket.emit('new user', {user: $scope.user, room: companion});
+		socket.emit('get user', companion._id);
+
 
 		socket.on('user', function(user){
 			$timeout(function(){
-				$scope.companion = user;
+				socket.room = user;
+				socket.private = true;
 				socket.user = $scope.user;
-				socket.companion = user;
-				$scope.sockets[$scope.companion._id] = socket;
-				socketInit.resolve();
+				$rootScope.sockets[companion._id] = socket;
+				socketInit();
 			}, 0);
 		});
 	}
-	else socketInit.resolve();
+	else socketInit();
 
-	socketInit.promise.then(function(){
-		socket = $rootScope.sockets[$scope.companion._id];
+	function socketInit()
+	{
+		socket = $rootScope.sockets[companion._id];
+		$rootScope.room = $scope.companion = companion = socket.room;
 		socket.unread = 0;
-		socket.emit('get history');
+		socket.emit('get private history', {id1: user._id, id2: companion._id});
+
+		socket.off();
 
 		socket.on('reconnect', function(){
 			location.reload();
@@ -41,24 +47,25 @@ chatio.controller('privateCtrl', function($scope, $routeParams, $timeout, $q, $r
 			addServerMessage('Connection lost', 'error');
 		});
 
-		socket.on('history', function(data){
+		socket.on('private history', function(data){
 			$scope.$apply(function(){
 				$scope.messages = data;
 				$scope.scrollGlue = true;
 			});
 		});
 
-		socket.on('new message', function(data){
-			if ($rootScope.room._id != $scope.companion._id)
+		socket.on('new private message', function(data){
+			if ($rootScope.room._id != data.from && $rootScope.room._id != data.to)
 				$rootScope.$apply(function(){
-					++$rootScope.sockets[$scope.companion._id].unread;
+					if ($rootScope.sockets[data.from]) ++$rootScope.sockets[data.from].unread;
+					if ($rootScope.sockets[data.to]) ++$rootScope.sockets[data.to].unread;
 				});
 			$scope.$apply(function(){
 				$scope.messages.push(data);
 				$scope.scrollGlue = true;
 			});
 		});
-	});
+	}
 
 	function addServerMessage(text, type)
 	{
@@ -92,6 +99,4 @@ chatio.controller('privateCtrl', function($scope, $routeParams, $timeout, $q, $r
 		socket.emit('send private message', msg);
 		$scope.msg = '';
 	}
-
-	$scope.popups = popup.popups;
 });

@@ -43,6 +43,10 @@ module.exports = function(io){
         
       });
 
+      socket.on('register listener', function(){
+        socket.join('private listeners');
+      });
+
       //Update usernames list
       socket.on('update usernames', function(){
         updateUsers(socket.room._id);
@@ -52,6 +56,12 @@ module.exports = function(io){
       socket.on('get history', function(){
         getHistory(socket.room._id, function(messages){
           socket.emit('history', messages);
+        });
+      });
+
+      socket.on('get private history', function(data){
+        getPrivateHistory(data.id1, data.id2, function(messages){
+          socket.emit('private history', messages);
         });
       });
 
@@ -71,9 +81,11 @@ module.exports = function(io){
       socket.on('send private message', function(text){
         var msg = {
           text: text,
-          room: socket.room._id,
-          time: Date.now(),
-          username: socket.user.username
+          private: true,
+          from: socket.user._id,
+          to: socket.room._id,
+          username: socket.user.username,
+          time: Date.now()
         };
         addMessage(msg, function(){
           var sockets = io.sockets.connected;
@@ -83,10 +95,12 @@ module.exports = function(io){
             if (!cur.user) continue;
             if (cur.user._id == socket.room._id)
             {
-              io.to(cur.id).emit('new message', msg);
-              return;
+              io.to(cur.id).emit('new private message', msg);
+              break;
             }
           }
+          socket.emit('new private message', msg);
+          io.to('private listeners').emit('new private message', msg);
         });
       });
 
@@ -123,7 +137,7 @@ module.exports = function(io){
       });
 
       socket.on('add friend', function(data){
-        console.log('user: ' + data.userid + ' friend: ' + friend.id);
+        console.log('user: ' + data.userid + ' friend: ' + data.friendid);
         User.findById(data.userid, function(err, user){
           if (err) return console.log(err);
           if (user)
@@ -242,7 +256,15 @@ module.exports = function(io){
   function getHistory(roomid, callback)
   {
     Message.find({room: roomid}, function(err, messages){
-      callback(messages);
+      if (err) return console.log(err);
+      if (messages) callback(messages);
+    });
+  }
+
+  function getPrivateHistory(id1, id2, callback)
+  {
+    Message.find({private: true}).and({$or: [{$and: [{from: id1}, {to: id2}]}, {$and: [{from: id2, to: id1}]}]}).exec(function(err, messages){
+      if (messages) callback(messages);
     });
   }
 
