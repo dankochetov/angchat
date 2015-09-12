@@ -102,16 +102,13 @@ module.exports = function(io){
       });
 
       socket.on('delete room', function(id){
-        if (!usersInRoom[id] || usersInRoom[id] == 0)
-        {
-          Room.findById(id).remove(function(err){
-            if (err) console.log(err);
-            updateRooms();
-          });
-          Message.find({room: id}).remove(function(err){
-            if (err) console.log(err);
-          });
-        }
+        Room.findById(id).remove(function(err){
+          if (err) console.log(err);
+          updateRooms();
+        });
+        Message.find({room: id}).remove(function(err){
+          if (err) console.log(err);
+        });
       });
 
       socket.on('comment', function(data){
