@@ -56,10 +56,12 @@ chatio.controller('privateCtrl', function($scope, $routeParams, $timeout, $q, $r
 
 		socket.on('new private message', function(data){
 			if ($rootScope.room._id != data.from && $rootScope.room._id != data.to)
+			{
 				$rootScope.$apply(function(){
 					if ($rootScope.sockets[data.from]) ++$rootScope.sockets[data.from].unread;
 					if ($rootScope.sockets[data.to]) ++$rootScope.sockets[data.to].unread;
 				});
+			}
 			$scope.$apply(function(){
 				$scope.messages.push(data);
 				$scope.scrollGlue = true;
@@ -90,7 +92,8 @@ chatio.controller('privateCtrl', function($scope, $routeParams, $timeout, $q, $r
 			if (cur == id) break;
 			prev = cur;
 		}
-		$location.url($rootScope.sockets[prev].room._id);
+		if (prev) $location.url($rootScope.sockets[prev].room._id);
+		else $location.url('/');
 		delete $rootScope.sockets[id];
 	}
 

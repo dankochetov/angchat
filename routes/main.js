@@ -21,7 +21,7 @@ router.get('/rooms', function(req, res, next){
 
 router.get('/:room', function(req, res, next){
 	Room.findById(req.params.room, function(err, room){
-		if (err || !room) return next();
+		if (err) return next(err);
 		res.render('main/room');
 	});
 });

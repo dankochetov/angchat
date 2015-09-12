@@ -1,6 +1,6 @@
 chatio.controller('roomsCtrl', function($scope, $rootScope, $timeout, $http){
 
-	var socket = $scope.socket = $rootScope.sockets['rooms'];
+	var socket = $scope.socket = $rootScope.roomsSocket;
 
 	$scope.rooms = [];
 	$scope.users = [];

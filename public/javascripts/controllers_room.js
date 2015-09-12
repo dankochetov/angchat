@@ -33,7 +33,7 @@ chatio.controller('roomCtrl', function($scope, $rootScope, $http, $timeout, $loc
 				socket.user = user;
 				socket.room = room;
 				socket.private = false;
-				socket.emit('update usernames');
+				socket.emit('update users');
 				$rootScope.sockets[room._id] = socket;
 				socketInit();
 			});
@@ -138,7 +138,8 @@ chatio.controller('roomCtrl', function($scope, $rootScope, $http, $timeout, $loc
 			if (cur == id) break;
 			prev = cur;
 		}
-		$location.url($rootScope.sockets[prev].room._id);
+		if (prev) $location.url($rootScope.sockets[prev].room._id);
+		else $location.url('/');
 		delete $rootScope.sockets[id];
 	}
 

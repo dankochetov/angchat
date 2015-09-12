@@ -15,8 +15,8 @@ block content2
 					label Login
 					input.form-control(type='text', name='login', value='#{login}', ng-model='login')
 				.form-group
-					label Username (will be visible, login is used by default)
-					input.form-control(type='text', name='username', value='#{username}', placeholder='{{login}}')
+					label Username (will be shown in chat, login is used by default)
+					input.form-control(type='text', name='username', value='#{username}', placeholder='{{login}}', maxlength=30)
 				.form-group
 					label Password
 					input.form-control(type='password', name='password')

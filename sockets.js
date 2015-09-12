@@ -5,8 +5,6 @@ var Promise = require('promise');
 
 module.exports = function(io){
 
-  var usersInRoom = {};
-
   function init()
   {
     io.sockets.on('connection', function(socket){
@@ -16,19 +14,7 @@ module.exports = function(io){
         socket.join(data.room._id);
         socket.room = data.room;
         socket.user = data.user;
-        var sockets = io.sockets.connected;
-        var f = 0;
-        for (var cur in sockets)
-        {
-          cur = sockets[cur];
-          if (!cur.user) continue;
-          if (cur.user._id == data.user._id && cur.room._id == data.room._id) ++f;
-        }
-        if (f == 1)
-        {
-          if (!usersInRoom[socket.room]) usersInRoom[socket.room._id] = 1;
-           else ++usersInRoom[socket.room._id];
-        }
+
         updateUsers(socket.room._id);
         updateRooms();
 
@@ -44,11 +30,11 @@ module.exports = function(io){
       });
 
       socket.on('register listener', function(){
-        socket.join('private listeners');
+        socket.join('listeners');
       });
 
       //Update usernames list
-      socket.on('update usernames', function(){
+      socket.on('update users', function(){
         updateUsers(socket.room._id);
       });
 
@@ -100,7 +86,7 @@ module.exports = function(io){
             }
           }
           socket.emit('new private message', msg);
-          io.to('private listeners').emit('new private message', msg);
+          io.to('listeners').emit('new private message', msg);
         });
       });
 
@@ -137,7 +123,6 @@ module.exports = function(io){
       });
 
       socket.on('add friend', function(data){
-        console.log('user: ' + data.userid + ' friend: ' + data.friendid);
         User.findById(data.userid, function(err, user){
           if (err) return console.log(err);
           if (user)
@@ -181,18 +166,29 @@ module.exports = function(io){
     });
   }
 
+  function socketsInRoom(roomid)
+  {
+    roomid = roomid.toString();
+    var sockets = io.sockets.connected;
+    var res = [];
+    for (cur in sockets)
+    {
+      cur = sockets[cur];
+      if (cur.rooms.indexOf(roomid) != -1) res.push(cur);
+    }
+    return res;
+  }
+
   function updateRooms()
   {
     Room.find({}, function(err, rooms){
       if (err) return console.log(err);
-      var _rooms = [];
-      for (var room in rooms)
+      for (var roomid in rooms)
       {
-        room = rooms[room];
-        room['online'] = usersInRoom[room._id] ? usersInRoom[room._id] : 0;
-        _rooms.push(room);
+        var room = rooms[roomid];
+        var sockets = socketsInRoom(room._id);
+        rooms[roomid].online = sockets.length;
       }
-      rooms = _rooms;
       io.emit('rooms', rooms);
     });
   }
@@ -210,16 +206,7 @@ module.exports = function(io){
   function disconnect(socket)
   {
     if (!socket.user) return;
-    var f = 0;
-    var sockets = io.sockets.connected;
-    for (var cur in sockets)
-    {
-      if (!sockets[cur].user) continue;
-      if (sockets[cur].room._id == socket.room._id && sockets[cur].user._id == socket.user._id)
-        ++f;
-    }
-    if (f > 0) return;
-    --usersInRoom[socket.room._id];
+    console.log('disconnect');
     updateUsers(socket.room._id);
     updateRooms();
 
@@ -235,12 +222,12 @@ module.exports = function(io){
 
   function updateUsers(id)
   {
-    var sockets = io.sockets.connected;
+    var sockets = socketsInRoom(id);
     var users = [];
     for (var cur in sockets)
     {
       cur = sockets[cur];
-      if (!cur.user || cur.room._id != id) continue;
+      if (!cur.user) continue;
       if (users.indexOf(cur.user) == -1) users.push(cur.user);
     }
     io.to(id).emit('users', users);

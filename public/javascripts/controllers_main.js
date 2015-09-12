@@ -10,7 +10,9 @@ chatio.controller('mainCtrl', function($scope, $rootScope, $routeParams, $http, 
 
 	var socket;
 
-	if (!$rootScope.sockets || !$rootScope.sockets['rooms'])
+	if (!$rootScope.sockets) $rootScope.sockets = {};
+
+	if (!$rootScope.roomsSocket)
 	{
 		var socket = io.connect({forceNew: true});
 		socket.emit('comment', 'socked opened for Rooms');
@@ -18,11 +20,9 @@ chatio.controller('mainCtrl', function($scope, $rootScope, $routeParams, $http, 
 		socket.private = false;
 
 		$rootScope.room = socket.room;
-		if (!$rootScope.sockets) $rootScope.sockets = {};
-		$rootScope.sockets['rooms'] = socket;
+		$rootScope.roomsSocket = socket;
 	}
-	else socket = $rootScope.sockets['rooms'];
-
+	else socket = $rootScope.roomsSocket;
 	$scope.$on('users', function(event, data){
 		$scope.$apply(function(){
 			$scope.users = data;
@@ -58,12 +58,6 @@ chatio.controller('mainCtrl', function($scope, $rootScope, $routeParams, $http, 
 
 	$scope.checkActiveTab = function(cur){
 		return $rootScope.room._id == cur.room._id;
-	}
-
-	$scope.countTabs = function(){
-		var count = 0;
-		for (cur in $rootScope.sockets) ++count;
-			return count;
 	}
 
 	$rootScope.popups = popup.list;
