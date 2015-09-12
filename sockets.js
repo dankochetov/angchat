@@ -16,6 +16,7 @@ module.exports = function(io){
         socket.user = data.user;
 
         updateUsers(socket.room._id);
+        console.log('new user');
         updateRooms();
 
         Room.findById(socket.room._id, function(err, room){
@@ -36,6 +37,7 @@ module.exports = function(io){
       //Update usernames list
       socket.on('update users', function(){
         updateUsers(socket.room._id);
+        console.log('update users');
       });
 
       //Returns messages list
@@ -166,12 +168,18 @@ module.exports = function(io){
   function socketsInRoom(roomid)
   {
     roomid = roomid.toString();
-    var sockets = io.sockets.connected;
+    var sockets = io.nsps['/'].adapter.rooms[roomid];
     var res = [];
-    for (cur in sockets)
+    for (var cur in sockets)
     {
-      cur = sockets[cur];
-      if (cur.rooms.indexOf(roomid) != -1) res.push(cur);
+      var f = true;
+      for(var user in res)
+        if (res[user].user._id == io.sockets.connected[cur].user._id)
+        {
+          f = false;
+          break;
+        }
+      if (f) res.push(io.sockets.connected[cur]);
     }
     return res;
   }
@@ -184,7 +192,8 @@ module.exports = function(io){
       {
         var room = rooms[roomid];
         var sockets = socketsInRoom(room._id);
-        rooms[roomid].online = sockets.length;
+        console.log('update rooms');
+        rooms[roomid].online = sockets?sockets.length:0;
       }
       io.emit('rooms', rooms);
     });
@@ -219,14 +228,15 @@ module.exports = function(io){
 
   function updateUsers(id)
   {
+    id = id.toString();
     var sockets = socketsInRoom(id);
+    console.log('updateUsers');
     var users = [];
     for (var cur in sockets)
     {
-      cur = sockets[cur];
-      if (!cur.user) continue;
-      if (users.indexOf(cur.user) == -1) users.push(cur.user);
+      users.push(sockets[cur].user);
     }
+    console.log(users);
     io.to(id).emit('users', users);
   }
 
