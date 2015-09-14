@@ -88,7 +88,7 @@ chatio.controller('mainCtrl', function($scope, $rootScope, $routeParams, $http, 
 		updateTab(data.from, true);
 		if (data.to != user._id || $rootScope.room._id == data.from) return;
 		popup.add(data);
-		notifySound.play();
+		//notifySound.play();
 	});
 
 	$rootScope.listener = listener;
