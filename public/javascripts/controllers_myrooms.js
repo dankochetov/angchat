@@ -1,5 +1,5 @@
 chatio.controller('myroomsCtrl', function($scope, $http, $timeout, $filter){
-	var socket = io.connect({forceNew: true});
+	var socket = io.connect(hostname, {forceNew: true});
 	socket.emit('connect', 'socket opened for myrooms');
 
 	$scope.rooms = [];

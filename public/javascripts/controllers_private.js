@@ -12,7 +12,7 @@ chatio.controller('privateCtrl', function($scope, $routeParams, $timeout, $q, $r
 
 	if (!$rootScope.sockets || !$rootScope.sockets[companion._id])
 	{
-		socket = io.connect({forceNew: true});
+		socket = io.connect(hostname, {forceNew: true});
 		socket.emit('comment', 'socket opened for private with ' + companion._id);
 		socket.emit('new user', {user: $scope.user, room: companion});
 		socket.emit('get user', companion._id);

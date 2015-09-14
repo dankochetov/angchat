@@ -7,3 +7,5 @@ chatio.directive('actionOnFinish', function(){
 		if (scope.$last) scope.$emit('rendering finished');
 	}
 });
+
+var hostname = window.location.host;

@@ -27,7 +27,7 @@ chatio.controller('roomCtrl', function($scope, $rootScope, $http, $timeout, $loc
 	{
 		if (!$rootScope.sockets || !$rootScope.sockets[room._id])
 			showPasswordModal(room.protect, function(){
-				socket = io.connect({forceNew: true});
+				socket = io.connect(hostname, {forceNew: true});
 				socket.emit('comment', 'socket opened for ' + room._id);
 				socket.emit('new user', {user: $scope.user, room: room});
 				socket.user = user;

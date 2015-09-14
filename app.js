@@ -143,7 +143,7 @@ app.use(function(err, req, res, next) {
 });
 
 var server = require('http').createServer(app);
-var io = require('socket.io').listen(server);
+var io = require('socket.io')({'transports': ['xhr-polling'], 'polling duration': 10}).listen(server);
 server.listen(app.get('port'));
 
 app.locals.io = io;

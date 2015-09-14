@@ -7,7 +7,8 @@ module.exports = function(io){
 
   function init()
   {
-    io.sockets.on('connection', function(socket){
+    io.on('connection', function(socket){
+
       console.log('new connection');
       //When user logins or refreshes the pages
       socket.on('new user', function(data){

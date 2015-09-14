@@ -84,7 +84,7 @@ chatio.controller('mainCtrl', function($scope, $rootScope, $routeParams, $http, 
 
 	$rootScope.popups = popup.list;
 
-	var privateSocket = io.connect({forceNew: true});
+	var privateSocket = io.connect(hostname, {forceNew: true});
 	privateSocket.emit('comment', 'socket opened for private messages listening');
 	privateSocket.emit('register listener');
 	privateSocket.on('new private message', function(data){
