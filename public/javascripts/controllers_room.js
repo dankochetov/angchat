@@ -1,5 +1,4 @@
 chatio.controller('roomCtrl', function($scope, $rootScope, $http, $timeout, $location, $routeParams, $q, $modal){
-
 	var room;
 
 	var socket;
@@ -95,10 +94,6 @@ chatio.controller('roomCtrl', function($scope, $rootScope, $http, $timeout, $loc
 		});
 
 		socket.on('new message', function(data){
-			if ($rootScope.room._id != $scope.room._id)
-				$rootScope.$apply(function(){
-					++$rootScope.sockets[data.room].unread;
-				});
 			$timeout(function(){
 				$scope.messages.push(data);
 				$scope.scrollGlue = true;
@@ -133,5 +128,4 @@ chatio.controller('roomCtrl', function($scope, $rootScope, $http, $timeout, $loc
 		socket.emit('send message', msg);
 		$scope.msg = '';
 	}
-
 });

@@ -1,4 +1,4 @@
-chatio.controller('roomsCtrl', function($scope, $rootScope, $timeout, $http){
+chatio.controller('roomsCtrl', function($scope, $route, $rootScope, $timeout, $http){
 
 	var socket = $scope.socket = $rootScope.roomsSocket;
 
@@ -7,6 +7,7 @@ chatio.controller('roomsCtrl', function($scope, $rootScope, $timeout, $http){
 	$scope.loading = true;
 
 	socket.emit('get rooms');
+	socket.off();
 
 	socket.on('rooms', function(data){
 		$scope.loading = false;

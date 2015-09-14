@@ -14,13 +14,12 @@ chatio.controller('privateCtrl', function($scope, $routeParams, $timeout, $q, $r
 	{
 		socket = io.connect(hostname, {forceNew: true});
 		socket.emit('comment', 'socket opened for private with ' + companion._id);
-		socket.emit('new user', {user: $scope.user, room: companion});
 		socket.emit('get user', companion._id);
 
-
-		socket.on('user', function(user){
+		socket.on('user', function(companion){
+			socket.emit('new user', {user: $scope.user, room: companion});
 			$timeout(function(){
-				socket.room = user;
+				socket.room = companion;
 				socket.private = true;
 				socket.user = $scope.user;
 				$rootScope.sockets[companion._id] = socket;
@@ -55,13 +54,6 @@ chatio.controller('privateCtrl', function($scope, $routeParams, $timeout, $q, $r
 		});
 
 		socket.on('new private message', function(data){
-			if ($rootScope.room._id != data.from && $rootScope.room._id != data.to)
-			{
-				$rootScope.$apply(function(){
-					if ($rootScope.sockets[data.from]) ++$rootScope.sockets[data.from].unread;
-					if ($rootScope.sockets[data.to]) ++$rootScope.sockets[data.to].unread;
-				});
-			}
 			$scope.$apply(function(){
 				$scope.messages.push(data);
 				$scope.scrollGlue = true;

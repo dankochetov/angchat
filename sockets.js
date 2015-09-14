@@ -62,7 +62,7 @@ module.exports = function(io){
           username: socket.user.username
         };
         addMessage(msg, function(){
-          io.to(socket.room._id).emit('new message', msg);
+          io.to(socket.room._id).to('listeners').emit('new message', msg);
         });
       });
 
@@ -117,8 +117,8 @@ module.exports = function(io){
         console.log(data);
       });
 
-      socket.on('get friends', function(userid){
-        updateFriends(socket, userid);
+      socket.on('get friends', function(userid, callback){
+        updateFriends(callback, userid);
       });
 
       socket.on('add friend', function(data){
@@ -186,6 +186,7 @@ module.exports = function(io){
 
   function updateRooms()
   {
+    console.log('update rooms');
     Room.find({}, function(err, rooms){
       if (err) return console.log(err);
       for (var roomid in rooms)
@@ -283,16 +284,14 @@ module.exports = function(io){
     });
   }
 
-  function updateFriends(socket, userid){
+  function updateFriends(callback, userid){
     User.findById(userid, function(err, user){
       if (err) return console.log(err);
       if (user)
-      {
         User.find({_id: {$in: user.friends}}, function(err, friends){
           if (err) return console.log(err);
-          if (friends) socket.emit('friends', friends);
+          if (friends) callback(friends);
         });
-      }
     });
   }
 

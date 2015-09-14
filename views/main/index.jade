@@ -1,9 +1,6 @@
 extend ../layout
 
-block content
-	script(type='text/ng-template', id='contextRoom')
-		.btn-group-vertical(role='group')
-			
+block content			
 	script(src='/javascripts/routes_main.js')
 	script(src='/javascripts/controllers_main.js')
 	#mainWrapper(ng-cloak, ng-controller='mainCtrl')
@@ -20,7 +17,7 @@ block content
 							br
 							.inner
 								ul.list-unstyled
-									.dropdown(ng-repeat='friend in friends track by $index')
+									.dropdown(ng-repeat='friend in friends track by $index' action-on-finish)
 										li.userlist-item.dropdown-toggle(data-toggle='dropdown', aria-haspopup='true', aria-expanded='true', ng-click='setSelection(friend)', ) {{friend.username}}
 											.caret
 										ul.dropdown-menu

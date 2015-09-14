@@ -32,6 +32,9 @@ chatio.factory('popup', function($timeout){
 				$timeout(function(){
 					list.push(msg);
 				}, time);
+				$timeout(function(){
+						list.splice(0, 1);
+				}, 5000+time);
 			});
 		},
 		list: list

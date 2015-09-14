@@ -1,28 +1,22 @@
-chatio.controller('mainCtrl', function($scope, $rootScope, $routeParams, $http, $q, autoSync, $location, popup){
+chatio.controller('mainCtrl', function($scope, $rootScope, $routeParams, $http, $q, autoSync, $location, $timeout, popup){
 
-	var userInit = $q.defer();
 	var user;
-
-	$http.get('/getuser').then(function(response){
-		$rootScope.user = user = $scope.user = response.data;
-		userInit.resolve();
-	});
-
-	var socket;
+	$scope.friends = [];
 
 	if (!$rootScope.sockets) $rootScope.sockets = {};
 
-	if (!$rootScope.roomsSocket)
-	{
-		var socket = io.connect({forceNew: true});
-		socket.emit('comment', 'socked opened for Rooms');
-		socket.room = {_id: '/', name: 'Rooms'};
-		socket.private = false;
+	var socket = io.connect(hostname, {forceNew: true});
+	socket.emit('comment', 'socked opened for Rooms');
+	socket.room = {_id: '/', name: 'Rooms'};
+	socket.private = false;
+	$rootScope.room = socket.room;
+	$rootScope.roomsSocket = socket;
 
-		$rootScope.room = socket.room;
-		$rootScope.roomsSocket = socket;
-	}
-	else socket = $rootScope.roomsSocket;
+	$http.get('/getuser').then(function(response){
+		$rootScope.user = user = $scope.user = response.data;
+		userInit();
+	});
+
 	$scope.$on('users', function(event, data){
 		$scope.$apply(function(){
 			$scope.users = data;
@@ -33,14 +27,14 @@ chatio.controller('mainCtrl', function($scope, $rootScope, $routeParams, $http, 
 		dropdownSlide();
 	});
 
-	userInit.promise.then(function(){
-		socket.emit('get friends', $scope.user);
-		socket.on('friends', function(data){
-			$scope.$apply(function(){
+	function userInit()
+	{
+		socket.emit('get friends', user._id, function(data){
+			$timeout(function(){
 				$scope.friends = data;
 			});
 		});
-	});
+	}
 
 	$scope.setSelection = function(user){
 		$scope.selected = user;
@@ -74,22 +68,57 @@ chatio.controller('mainCtrl', function($scope, $rootScope, $routeParams, $http, 
 			if ($rootScope.sockets[cur].room._id == id) f = true;
 			else if (!f) prev = cur;
 		}
-		socket.off('disconnect');
+		socket.off();
 		socket.disconnect();
+		delete $rootScope.sockets[id];
 		if (!prev) prev = next;
 		if (prev) $location.url(($rootScope.sockets[prev].private?'user/':'') + $rootScope.sockets[prev].room._id);
 		else $location.url('/');
-		delete $rootScope.sockets[id];
 	}
 
 	$rootScope.popups = popup.list;
 
-	var privateSocket = io.connect(hostname, {forceNew: true});
-	privateSocket.emit('comment', 'socket opened for private messages listening');
-	privateSocket.emit('register listener');
-	privateSocket.on('new private message', function(data){
+	var listener = io.connect(hostname, {forceNew: true});
+	listener.emit('comment', 'socket opened for private messages listening');
+	listener.emit('register listener');
+	listener.on('new private message', function(data){
+		updateTab(data.from, true);
 		if (data.to != user._id || $rootScope.room._id == data.from) return;
 		popup.add(data);
 	});
+
+	$rootScope.listener = listener;
+
+	listener.on('new message', function(data){
+		updateTab(data.room);
+	});
+
+	function updateTab(id, private)
+	{
+		if (private && !$rootScope.sockets[id] && id != $rootScope.user._id)
+		{
+			var newSocket = io.connect(hostname, {forceNew: true});
+			newSocket.emit('comment', 'socket opened for private with ' + id);
+			newSocket.emit('get user', id);
+			newSocket.on('user', function(companion){
+				newSocket.emit('new user', {user: $scope.user, room: companion});
+				newSocket.room = companion;
+				newSocket.private = true;
+				newSocket.user = $scope.user;
+				$rootScope.sockets[id] = newSocket;
+				$rootScope.sockets[id].unread = 0;
+				update();
+			});
+		}
+		else update();
+
+		function update()
+		{
+			if (id != $rootScope.room._id && id != $rootScope.user._id)
+				$timeout(function(){
+					++$rootScope.sockets[id].unread;
+				});
+		}
+	}
 
 });
