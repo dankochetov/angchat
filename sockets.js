@@ -117,8 +117,8 @@ module.exports = function(io){
         console.log(data);
       });
 
-      socket.on('get friends', function(userid, callback){
-        updateFriends(callback, userid);
+      socket.on('get friends', function(userid){
+        updateFriends(socket, userid);
       });
 
       socket.on('add friend', function(data){
@@ -284,13 +284,13 @@ module.exports = function(io){
     });
   }
 
-  function updateFriends(callback, userid){
+  function updateFriends(socket, userid){
     User.findById(userid, function(err, user){
       if (err) return console.log(err);
       if (user)
         User.find({_id: {$in: user.friends}}, function(err, friends){
           if (err) return console.log(err);
-          if (friends) callback(friends);
+          if (friends) socket.emit('friends', friends);
         });
     });
   }

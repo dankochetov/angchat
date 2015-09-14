@@ -8,7 +8,6 @@ chatio.controller('mainCtrl', function($scope, $rootScope, $routeParams, $http, 
 	var socket = io.connect(hostname, {forceNew: true});
 	socket.emit('comment', 'socked opened for Rooms');
 	socket.room = {_id: '/', name: 'Rooms'};
-	socket.private = false;
 	$rootScope.room = socket.room;
 	$rootScope.roomsSocket = socket;
 
@@ -29,7 +28,9 @@ chatio.controller('mainCtrl', function($scope, $rootScope, $routeParams, $http, 
 
 	function userInit()
 	{
-		socket.emit('get friends', user._id, function(data){
+		socket.emit('get friends', user._id);
+		socket.on('friends', function(data)
+		{
 			$timeout(function(){
 				$scope.friends = data;
 			});
@@ -68,8 +69,8 @@ chatio.controller('mainCtrl', function($scope, $rootScope, $routeParams, $http, 
 			if ($rootScope.sockets[cur].room._id == id) f = true;
 			else if (!f) prev = cur;
 		}
-		socket.off();
-		socket.disconnect();
+		$rootScope.sockets[id].off();
+		$rootScope.sockets[id].disconnect();
 		delete $rootScope.sockets[id];
 		if (!prev) prev = next;
 		if (prev) $location.url(($rootScope.sockets[prev].private?'user/':'') + $rootScope.sockets[prev].room._id);
@@ -95,7 +96,8 @@ chatio.controller('mainCtrl', function($scope, $rootScope, $routeParams, $http, 
 
 	function updateTab(id, private)
 	{
-		if (private && !$rootScope.sockets[id] && id != $rootScope.user._id)
+		if (id == $rootScope.user._id) return;
+		if (private && !$rootScope.sockets[id])
 		{
 			var newSocket = io.connect(hostname, {forceNew: true});
 			newSocket.emit('comment', 'socket opened for private with ' + id);
@@ -114,7 +116,7 @@ chatio.controller('mainCtrl', function($scope, $rootScope, $routeParams, $http, 
 
 		function update()
 		{
-			if (id != $rootScope.room._id && id != $rootScope.user._id)
+			if ($rootScope.sockets[id] && id != $rootScope.room._id)
 				$timeout(function(){
 					++$rootScope.sockets[id].unread;
 				});
