@@ -1,4 +1,4 @@
-chatio.controller('mainCtrl', function($scope, $rootScope, $routeParams, $http, $q, autoSync, popup){
+chatio.controller('mainCtrl', function($scope, $rootScope, $routeParams, $http, $q, autoSync, $location, popup){
 
 	var userInit = $q.defer();
 	var user;
@@ -58,6 +58,28 @@ chatio.controller('mainCtrl', function($scope, $rootScope, $routeParams, $http, 
 
 	$scope.checkActiveTab = function(cur){
 		return $rootScope.room._id == cur.room._id;
+	}
+
+	$scope.leave = function(id)
+	{
+		var prev, next;
+		var f = false;
+		for (cur in $rootScope.sockets)
+		{
+			if (f)
+			{
+				next = cur;
+				break;
+			}
+			if ($rootScope.sockets[cur].room._id == id) f = true;
+			else if (!f) prev = cur;
+		}
+		socket.off('disconnect');
+		socket.disconnect();
+		if (!prev) prev = next;
+		if (prev) $location.url(($rootScope.sockets[prev].private?'user/':'') + $rootScope.sockets[prev].room._id);
+		else $location.url('/');
+		delete $rootScope.sockets[id];
 	}
 
 	$rootScope.popups = popup.list;

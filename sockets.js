@@ -16,7 +16,6 @@ module.exports = function(io){
         socket.user = data.user;
 
         updateUsers(socket.room._id);
-        console.log('new user');
         updateRooms();
 
         Room.findById(socket.room._id, function(err, room){
@@ -192,7 +191,6 @@ module.exports = function(io){
       {
         var room = rooms[roomid];
         var sockets = socketsInRoom(room._id);
-        console.log('update rooms');
         rooms[roomid].online = sockets?sockets.length:0;
       }
       io.emit('rooms', rooms);
@@ -230,13 +228,8 @@ module.exports = function(io){
   {
     id = id.toString();
     var sockets = socketsInRoom(id);
-    console.log('updateUsers');
     var users = [];
-    for (var cur in sockets)
-    {
-      users.push(sockets[cur].user);
-    }
-    console.log(users);
+    for (var cur in sockets) users.push(sockets[cur].user);
     io.to(id).emit('users', users);
   }
 

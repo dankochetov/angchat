@@ -1,4 +1,4 @@
-chatio.controller('privateCtrl', function($scope, $routeParams, $timeout, $q, $rootScope, $location, autoSync){
+chatio.controller('privateCtrl', function($scope, $routeParams, $timeout, $q, $rootScope, autoSync){
 
 	var socket;
 	var user;
@@ -79,22 +79,6 @@ chatio.controller('privateCtrl', function($scope, $routeParams, $timeout, $q, $r
 				time: Date.now()
 			});
 		});
-	}
-
-	$rootScope.leave = function(id)
-	{
-		var socket = $rootScope.sockets[id];
-		socket.off('disconnect');
-		socket.disconnect();
-		var prev;
-		for (cur in $rootScope.sockets)
-		{
-			if (cur == id) break;
-			prev = cur;
-		}
-		if (prev) $location.url($rootScope.sockets[prev].room._id);
-		else $location.url('/');
-		delete $rootScope.sockets[id];
 	}
 
 	$scope.submit = function(msg){

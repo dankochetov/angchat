@@ -12,10 +12,14 @@ body {
 
 #chatWindow {
 	min-height: 300px;
-	max-height: 300px;
+	height: 450px !important;
 	overflow-y: auto;
 	overflow-x: hidden;
 	word-wrap: break-word;
+	height: 100%;
+}
+
+#chatWrapper .panel-body {
 }
 
 #chatWindow p {

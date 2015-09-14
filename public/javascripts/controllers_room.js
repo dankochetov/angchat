@@ -128,21 +128,6 @@ chatio.controller('roomCtrl', function($scope, $rootScope, $http, $timeout, $loc
 		});
 	}
 
-	$rootScope.leave = function(id)
-	{
-		socket.off('disconnect');
-		socket.disconnect();
-		var prev;
-		for (cur in $rootScope.sockets)
-		{
-			if (cur == id) break;
-			prev = cur;
-		}
-		if (prev) $location.url($rootScope.sockets[prev].room._id);
-		else $location.url('/');
-		delete $rootScope.sockets[id];
-	}
-
 	$scope.submit = function(msg){
 		if ($scope.messageForm.$invalid) return;
 		socket.emit('send message', msg);
