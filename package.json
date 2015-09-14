@@ -20,6 +20,7 @@
     "connect-flash": "*",
     "mongoose": "*",
     "bcrypt-nodejs": "*",
-    "express-validator": "*"
+    "express-validator": "*",
+    "sockjs": "*"
   }
 }
