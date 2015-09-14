@@ -14,7 +14,7 @@ script(type='text/ng-template', id='passwordModal')
 	#chatWindow(scroll-glue-bottom='scrollGlue')
 		.row
 			.col-md-11
-				div(ng-repeat='message in messages')
+				div(ng-repeat='message in messages | orderBy: message.time')
 					.msg(class='msg-{{message.username}}', ng-class="{'alert alert-danger': message.type==\"error\", 'alert alert-info': message.type==\"info\"}")
 						.time {{message.time | date : '[HH:mm:ss] '}}
 						.username {{message.username}}: 

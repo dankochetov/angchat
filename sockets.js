@@ -242,7 +242,7 @@ module.exports = function(io){
 
   function getHistory(roomid, callback)
   {
-    Message.find({room: roomid}, function(err, messages){
+    Message.find({room: roomid}, null, {sort: 'time'}, function(err, messages){
       if (err) return console.log(err);
       if (messages) callback(messages);
     });
@@ -250,7 +250,7 @@ module.exports = function(io){
 
   function getPrivateHistory(id1, id2, callback)
   {
-    Message.find({private: true}).and({$or: [{$and: [{from: id1}, {to: id2}]}, {$and: [{from: id2, to: id1}]}]}).exec(function(err, messages){
+    Message.find({private: true}).sort('time').and({$or: [{$and: [{from: id1}, {to: id2}]}, {$and: [{from: id2, to: id1}]}]}).exec(function(err, messages){
       if (messages) callback(messages);
     });
   }
