@@ -1,6 +1,6 @@
 'use strict';
 
-var chatio = angular.module('chatio', ['ngRoute', 'ngCookies', 'ngAnimate', 'ui.bootstrap', 'luegg.directives']);
+var chatio = angular.module('chatio', ['ngRoute', 'ngCookies', 'ngAnimate', 'ngAudio', 'ui.bootstrap', 'luegg.directives']);
 
 chatio.directive('actionOnFinish', function(){
 	return function(scope){

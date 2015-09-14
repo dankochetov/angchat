@@ -1,4 +1,4 @@
-chatio.controller('mainCtrl', function($scope, $rootScope, $routeParams, $http, $q, autoSync, $location, $timeout, popup){
+chatio.controller('mainCtrl', function($scope, $rootScope, $routeParams, $http, $q, autoSync, $location, $timeout, ngAudio, popup){
 
 	var user;
 	$scope.friends = [];
@@ -79,6 +79,8 @@ chatio.controller('mainCtrl', function($scope, $rootScope, $routeParams, $http, 
 
 	$rootScope.popups = popup.list;
 
+	var notifySound = ngAudio.load('../sounds/notify.mp3');
+
 	var listener = io.connect(hostname, {forceNew: true});
 	listener.emit('comment', 'socket opened for private messages listening');
 	listener.emit('register listener');
@@ -86,6 +88,7 @@ chatio.controller('mainCtrl', function($scope, $rootScope, $routeParams, $http, 
 		updateTab(data.from, true);
 		if (data.to != user._id || $rootScope.room._id == data.from) return;
 		popup.add(data);
+		notifySound.play();
 	});
 
 	$rootScope.listener = listener;
