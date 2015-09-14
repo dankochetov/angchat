@@ -64,6 +64,8 @@ chatio.controller('roomCtrl', function($scope, $rootScope, $http, $timeout, $loc
 
 	function socketInit()
 	{
+		$rootScope.title = ' - ' + room.name;
+		
 		socket = $rootScope.sockets[room._id];
 		socket.user.rank = $rootScope.user.rank = Math.max(socket.user.rank, room.users[user._id]?room.users[user._id]:0);
 		socket.unread = 0;

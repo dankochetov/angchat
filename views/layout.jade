@@ -1,8 +1,7 @@
 doctype html
-html(ng-app='chatio')
-	head
+html(ng-app='chatio' ng-cloak)
+	head(ng-controller='headCtrl')
 		meta(name='viewport', content='width=device-width, initial-scale=1')
-		title ChatIO
 		link(rel='stylesheet', href='/stylesheets/style.css')
 		link(rel='stylesheet', href='/stylesheets/input-addon.css')
 		link(rel='stylesheet', href='/stylesheets/bootstrap.min.css')
@@ -20,6 +19,7 @@ html(ng-app='chatio')
 		script(src='/javascripts/chatio.js')
 		script(src='/javascripts/services.js')
 		script(src='/javascripts/filters.js')
+		script(src='/javascripts/controllers_head.js')
 		script(src='/javascripts/controllers_index.js')
 		script(src='/javascripts/controllers_rooms.js')
 		script(src='/javascripts/controllers_myrooms.js')
@@ -33,3 +33,4 @@ html(ng-app='chatio')
 	body
 		.container-fluid
 			block content
+	title AngChat{{$root.title}}

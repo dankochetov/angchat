@@ -1,4 +1,4 @@
-.panel-body(ng-show='rooms.length==0')
+.panel-body(ng-show='rooms.length==0', ng-init='$root.title = " - Rooms"')
 	div.text-center(ng-show='!loading') No rooms yet. 
 		a.btn.btn-default(href='/myrooms/create') Create room
 	div.text-center(ng-show='loading') Loading rooms...

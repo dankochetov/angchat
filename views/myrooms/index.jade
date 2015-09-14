@@ -1,7 +1,7 @@
 extends ../layout
 
 block content
-	.row(ng-controller='myroomsCtrl', ng-cloak)
+	.row(ng-controller='myroomsCtrl', ng-init='$root.title = " - My rooms"', ng-cloak)
 		.col-sm-6.col-sm-offset-3.col-xs-12
 			.panel.panel-default
 				.panel-heading

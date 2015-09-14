@@ -31,8 +31,12 @@ chatio.controller('privateCtrl', function($scope, $routeParams, $timeout, $q, $r
 
 	function socketInit()
 	{
+
 		socket = $rootScope.sockets[companion._id];
 		$rootScope.room = $scope.companion = companion = socket.room;
+
+		$rootScope.title = ' - ' + companion.username;
+
 		socket.unread = 0;
 		socket.emit('get private history', {id1: user._id, id2: companion._id});
 
