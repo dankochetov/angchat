@@ -82,10 +82,9 @@ chatio.controller('roomCtrl', function($scope, $rootScope, $http, $timeout, $loc
 				});
 			}
 
-			$rootScope.clearChat = function(){
-				socket.emit('clear history', room._id);
-				$scope.messages = [];
-			}
+			$scope.$on('clear history', function(event, id){
+				if (id == room._id) $scope.messages = [];
+			});
 		}
 	});
 });

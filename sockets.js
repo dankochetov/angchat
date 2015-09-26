@@ -37,7 +37,7 @@ module.exports = function(sockjs, connections){
 
       socket.on('data', function(e){
         e = JSON.parse(e);
-        console.log(e);
+        //console.log(e);
         var event = e.event;
         var data = e.data;
 

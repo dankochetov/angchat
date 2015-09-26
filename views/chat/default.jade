@@ -39,11 +39,11 @@ script(type='text/ng-template', id='passwordModal')
 						.row
 							.col-xs-8.col-md-11
 								tabset#tabs(type='pills')
-									tab(ng-repeat='cur in $root.tabs', active='cur.active', select='$root.tab=cur')
+									tab(ng-repeat='cur in $root.tabs', ng-init='tab=cur', active='cur.active', select='$root.tab=tab')
 										tab-heading
 											.glyphicon.glyphicon-user(ng-if='cur.private')  
 											|{{cur.title}}
-									tab(active='$root.rootTab.active', select='$root.tab=$root.rootTab')
+									tab(active='$root.rootTab.active', select='$root.tab=tab=$root.rootTab')
 										tab-heading
 											.glyphicon.glyphicon-plus(ng-if='!$root.rootTab.active')
 											div(ng-if='$root.rootTab.active') New tab

@@ -108,6 +108,11 @@ chatio.controller('chatCtrl', function($scope, $rootScope, $route, $routeParams,
 		else if (pos < tabs.count() - 1) tabs.active(pos + 1);
 		else tabs.active('root');
 	}
+
+	$scope.clearChat = function(){
+		socket.emit('clear history', $scope.tab.id);
+		$scope.$broadcast('clear history', $scope.tab.id);
+	}
 });
 
 chatio.controller('sendMsgCtrl', function($scope, $rootScope, socket){
@@ -119,4 +124,8 @@ chatio.controller('sendMsgCtrl', function($scope, $rootScope, socket){
 			socket.emit('send message', JSON.stringify({roomid: $rootScope.tab.id, msg: msg}));
 		$scope.msg = '';
 	}
+});
+
+chatio.controller('tabCtrl', function($scope){
+
 });
