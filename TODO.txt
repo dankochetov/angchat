@@ -1,0 +1,3 @@
+- Починить tab.select
+- Переписать на coffeescript
+- Сжать код

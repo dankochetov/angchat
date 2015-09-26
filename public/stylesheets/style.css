@@ -176,7 +176,7 @@ img.signin {
 	color: white;
 }
 
-.userlist-item {
+li.userlist-item.dropdown-toggle {
 	cursor: pointer;
 	outline: none;
 	display: block;
@@ -211,4 +211,12 @@ img.signin {
 
 .you:after {
 	content: ' (you)';
+}
+
+.ui_btn {
+	cursor: pointer;
+}
+
+.userlist-item img {
+	width: 12px;
 }

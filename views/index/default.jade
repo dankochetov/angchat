@@ -1,22 +1,20 @@
-extends layout
-
-block content2
-	.panel.panel-default#login(ng-controller='indexDefaultCtrl')
-		.panel-heading
-			h3.text-center Welcome!
-		.panel-body
-			form
-				.container-fluid
-					br
-					.form-group
-						.row
-							.col-sm-6.col-sm-offset-3
-								a.btn.btn-login.form-control(href='/signup') Join us
-					.form-group
-						.row
-							.col-sm-6.col-sm-offset-3
-								a.btn.btn-login.form-control(href='/signin') Sign in
-					.form-group.pull-right
-						label Fast login: 
-						a(href='', ng-click='fb_login()'): img.signin(src='/images/signin/fb.png', width=24)
-						a(href='', ng-click='vk_login()'): img.signin(src='/images/signin/vk.png', width=24)
+.panel.panel-default#login(ng-controller='indexCtrl')
+	.panel-heading
+		h3.text-center Welcome!
+			include ../loading
+	.panel-body
+		form
+			.container-fluid
+				br
+				.form-group
+					.row
+						.col-sm-6.col-sm-offset-3
+							btn.btn.btn-login.form-control(ng-click='go("/signup")') Join us
+				.form-group
+					.row
+						.col-sm-6.col-sm-offset-3
+							btn.btn.btn-login.form-control(ng-click='go("/signin")') Sign in
+				.form-group.pull-right
+					label Fast login: 
+					span.ui_btn(ng-click='fb_login()'): img.signin(src='/images/signin/fb.png', width=24)
+					span.ui_btn(ng-click='vk_login()'): img.signin(src='/images/signin/vk.png', width=24)

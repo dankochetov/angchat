@@ -10,30 +10,30 @@ var User = require('../models/user');
 /* GET home page. */
 
 router.get('/', function(req, res, next){
-	if (req.isAuthenticated()) return res.redirect('/main');
-	res.render('index/default', {
-		service: 'index'
-	});
+	if (req.isAuthenticated()) res.render('chat/index');
+	else res.render('index/index');
+});
+
+router.get('/index', function(req, res, next){
+	res.render('index/default');
 });
 
 router.get('/signin', function(req, res, next){
-	if (req.isAuthenticated()) return res.redirect('/main');
-	res.render('index/signin', {
-		service: 'index',
-		errors: req.flash('errors')
-	});
+	res.render('index/signin');
 });
 
 router.get('/signin/fb', passport.authenticate('facebook'));
 
 router.get('/signin/fb/cb', passport.authenticate('facebook', {failureRedirect: '/'}), function(req, res, next){
-	res.redirect('/main#');
+	require('../sockets')(req.app.locals.sockjs, req.app.locals.connections).autoLogin();
+	res.redirect('/');
 });
 
 router.get('/signin/vk', passport.authenticate('vkontakte'));
 
 router.get('/signin/vk/cb', passport.authenticate('vkontakte', {failureRedirect: '/'}), function(req, res, next){
-	res.redirect('/main#');
+	require('../sockets')(req.app.locals.sockjs, req.app.locals.connections).autoLogin();
+	res.redirect('/');
 });
 
 router.post('/signin', function(req, res, next){
@@ -43,33 +43,24 @@ router.post('/signin', function(req, res, next){
 	var errors = req.validationErrors();
 
 	if (errors)
-	{
-		req.flash('errors', errors);
-		return res.redirect('/signin');
-	}
+		return res.end(JSON.stringify(errors));
 
 	passport.authenticate('local', function(err, user, info){
-		if (info) req.flash('errors', {msg: info.error});
+		if (info) errors = [{msg: info.error}];
 		if (err) return next(err);
 		if (!user)
-			return res.redirect('/signin');
+			return res.end(JSON.stringify(errors));
 		req.logIn(user, function(err){
 			if (err) return next(err);
-			var sockets = require('../sockets')(req.app.locals.io);
-			sockets.login(req.body.login);
-			return res.redirect('/main');
+			require('../sockets')(req.app.locals.sockjs, req.app.locals.connections).autoLogin();
+			return res.end('success');
 		});
 	})(req, res, next);
 });
 
 router.get('/signup', function(req, res, next){
-	if (req.isAuthenticated()) return res.redirect('/main');
-	res.render('index/signup', {
-		service: 'index',
-		errors: req.flash('errors'),
-		login: req.flash('login'),
-		username: req.flash('username')
-	});
+	if (req.isAuthenticated()) res.end('<h1>Error!</h1>You are already logged in');
+	else res.render('index/signup');
 });
 
 router.post('/signup', function(req, res, next){
@@ -94,15 +85,7 @@ router.post('/signup', function(req, res, next){
 		if (user)
 			errors.push({msg: 'User already exists!'});
 
-		if (errors.length > 0)
-		{
-			req.flash('login', login);
-			req.flash('username', username2);
-			req.flash('errors', errors);
-			res.location('/signup');
-			res.redirect('/signup');
-		}
-
+		if (errors.length > 0) res.end(JSON.stringify(errors));
 		else
 		{
 			var user = new User({login: login, username: username, password: password});
@@ -110,7 +93,8 @@ router.post('/signup', function(req, res, next){
 				if (err) return next(err);
 				req.logIn(user, function(err){
 					if (err) return next(err);
-					res.redirect('/main');
+					require('../sockets')(req.app.locals.sockjs, req.app.locals.connections).autoLogin();
+					res.end('registered');
 				});
 			});
 		}
@@ -118,13 +102,13 @@ router.post('/signup', function(req, res, next){
 });
 
 router.get('/logout', function(req, res, next){
-	if (req.user)
+	if (req.isAuthenticated())
 	{
-		var sockets = require('../sockets')(req.app.locals.io);
-		sockets.logout(req.user.login);
 		req.logout();
+		require('../sockets')(req.app.locals.sockjs, req.app.locals.connections).autoLogout();
+		res.end('logged out');
 	}
-	return res.redirect('/');
+	else res.end('not logged');
 });
 
 module.exports = router;

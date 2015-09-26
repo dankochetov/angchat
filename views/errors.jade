@@ -1,6 +1,4 @@
-if errors.length > 0
-				ul.alert.alert-danger
-					each error in errors
-						li.list-unstyled
-							.glyphicon.glyphicon-remove-circle
-							=' '+error.msg
+ul.alert.alert-danger(ng-show='errors.length>0')
+		li.list-unstyled(ng-repeat='error in errors track by $index')
+			.glyphicon.glyphicon-remove-circle
+			|  {{error.msg}}

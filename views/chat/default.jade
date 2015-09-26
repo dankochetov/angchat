@@ -1,0 +1,85 @@
+script(type='text/ng-template', id='passwordModal')
+	.modal-header
+		h3 {{room.name}}
+	.modal-body
+		form(ng-submit='$close(password)', id='passwordModalForm')
+			input.hidden
+			input.hidden(type='password')
+			label Enter password for this room:
+			input.form-control#passwordModalInput(type='password', ng-model='password', autofocus)
+	.modal-footer
+		button.btn.btn-info(type='submit', form='passwordModalForm') Enter
+		button.btn.btn-warning(ng-click='$dismiss()') Cancel
+#mainWrapper(ng-cloak, ng-controller='chatCtrl')
+	.row
+		.col-xs-3
+			.panel.panel-default#friendsWrapper
+				.panel-heading.text-center Friends
+				.panel-body
+					.text-center(ng-if='loading_friends') Loading...
+					span(ng-if='friends.length>0')
+						.input-group#search
+							.input-group-addon
+								.glyphicon.glyphicon-search
+							input.filter.form-control(type='text', ng-model='filterFriends')
+						br
+						.inner
+							ul.list-unstyled
+								.dropdown(ng-repeat='friend in friends | filter: filterFriends track by $index' action-on-finish)
+									li.userlist-item.dropdown-toggle(data-toggle='dropdown', aria-haspopup='true', aria-expanded='true')
+										span(ng-bind-html='$root.showUsername(friend)')
+										.caret
+									ul.dropdown-menu
+										li: a(href='', ng-click='openTab(friend._id, true)') Private chat
+										li: a(href='', ng-click='removeFriend(friend)') Remove from friends
+					.text-center(ng-if='friends.length==0 && !loading_friends') You have no friends yet.
+		.col-xs-6
+			.panel.panel-default#chatWrapper
+				.panel-heading
+						.row
+							.col-xs-8.col-md-11
+								tabset#tabs(type='pills')
+									tab(ng-repeat='cur in $root.tabs', active='cur.active', select='$root.tab=cur')
+										tab-heading
+											.glyphicon.glyphicon-user(ng-if='cur.private')  
+											|{{cur.title}}
+									tab(active='$root.rootTab.active', select='$root.tab=$root.rootTab')
+										tab-heading
+											.glyphicon.glyphicon-plus(ng-if='!$root.rootTab.active')
+											div(ng-if='$root.rootTab.active') New tab
+							.col-xs-4.col-md-1
+								.dropdown.pull-right
+									.button.btn.btn-default.dropdown-toggle(id='optionsMenu', data-toggle='dropdown', aria-haspopup='true', aria-expanded='true')
+										|Options 
+										.span.caret
+									ul.dropdown-menu(aria-labelledby='optionsMenu')
+
+										li(ng-if-start='$root.user.rank>2 && !$root.tab.private && $root.tab!=$root.rootTab'): a(href='', ng-click='clearChat()') Clear chat
+										li.divider(role='separator' ng-if-end)
+										li: a(href='', ng-click='$root.closeTab($root.tab)', ng-if='$root.tab!=$root.rootTab') Close tab
+										li: a(href='', ng-click='template.go("/chat/myrooms")') My rooms
+										li: a(href='', ng-click='logout()') Logout
+				div(ng-repeat='cur in $root.tabs')
+					span(ng-if='cur.private', ng-controller='privateCtrl', ng-show='cur.active')
+						div(ng-include='cur.url', ng-init='tabInit.resolve(cur)')
+					span(ng-if='!cur.private', ng-controller='roomCtrl', ng-show='cur.active')
+						div(ng-include='cur.url', ng-init='tabInit.resolve(cur)')
+				div(ng-include='$root.rootTab.url', ng-controller='roomsCtrl', ng-show='$root.rootTab.active')
+		.col-xs-3(ng-if='$root.tab!=$root.rootTab && !$root.tab.private')
+			.panel.panel-default#userWrapper
+				.panel-heading
+					.text-center In this room
+				.panel-body
+					.inner
+						ul.list-unstyled
+							.dropdown(ng-repeat='user in users' action-on-finish)
+									li.userlist-item.dropdown-toggle(data-toggle='dropdown', aria-haspopup='true', aria-expanded='true', ng-if='user._id!=$root.user._id')
+										span(ng-bind-html='$root.showUsername(user)')
+										.caret
+									ul.dropdown-menu
+										li: a(href='', ng-click='openTab(user._id, true)') Private chat
+										li: a(href='', ng-click='addFriend(user)') Add to friends list
+									li.userlist-item(ng-if='user._id==$root.user._id')
+										span(ng-bind-html='$root.showUsername(user)')
+										.you
+	include ../popups

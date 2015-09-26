@@ -1,0 +1,4 @@
+extends ../layout
+
+block content
+	ng-include(ng-init='template.go("/chat")', src='template.url()', ng-controller='includeCtrl')

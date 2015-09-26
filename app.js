@@ -74,10 +74,9 @@ passport.use(new VkontakteStrategy({
 }));
 
 var index = require('./routes/index');
-var main = require('./routes/main');
-var getuser = require('./routes/api/getuser');
-var getroom = require('./routes/api/getroom');
 var myrooms = require('./routes/myrooms');
+var chat = require('./routes/chat');
+var getuser = require('./routes/api/getuser');
 
 var app = express();
 
@@ -105,10 +104,13 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 app.use('/', index);
-app.use('/', getroom);
-app.use('/getuser', getuser);
-app.use('/main', main);
+app.use('/chat', chat);
 app.use('/myrooms', myrooms);
+app.use('/', getuser);
+
+app.get('/test', function(req, res, next){
+  res.render('test');
+});
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -142,13 +144,15 @@ app.use(function(err, req, res, next) {
   });
 });
 
-var server = require('http').createServer(app);
-var io = require('socket.io').listen(server);
-server.listen(app.get('port'));
+var server = require('http').createServer(app).listen(app.get('port'));
+var sockjs = require('sockjs').createServer({sockjs_url: 'http://cdn.jsdelivr.net/sockjs/1.0.1/sockjs.min.js'});
+var connections = [];
+sockjs.installHandlers(server, {prefix: '/sockjs'});
 
-app.locals.io = io;
+app.locals.sockjs = sockjs;
+app.locals.connections = connections;
 
-var sockets = require('./sockets')(io);
+var sockets = require('./sockets')(sockjs, connections);
 sockets.init();
 
 module.exports = app;
