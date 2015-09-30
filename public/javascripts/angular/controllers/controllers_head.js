@@ -1,5 +1,10 @@
-chatio.controller('headCtrl', function($rootScope, socket){
+chatio.controller('headCtrl', function($rootScope, $localStorage, socket){
+	
 	socket.init();
+	$rootScope.$storage = $localStorage.$default({
+		tabs: [],
+		tab: 'root'
+	});
 
 	$rootScope.showUsername = function(user){
 		var res = user.username;

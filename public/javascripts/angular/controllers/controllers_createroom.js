@@ -1,11 +1,18 @@
-chatio.controller('createroomCtrl', function($scope, $http, $location, template, autoLogout){
+chatio.controller('createroomCtrl', function($scope, $http, $location, template, autoLogout, tabs){
 	$scope.submit = function(){
 		$http.post('/chat/createroom', $scope.formData).then(function(response){
-			console.log(response.data);
+			var data = $scope.formData;
 			if (response.data.status != 'success') $scope.errors = response.data.errors;
 			else
 			{
-				$location.search('room', response.data.id);
+				var newTab = {
+						title: data.name,
+						id: response.data.id,
+						url: '/chat/room/' + response.data.id,
+						active: true,
+						private: false
+					}
+				tabs.open(newTab);
 				template.go('/');
 			}
 		});

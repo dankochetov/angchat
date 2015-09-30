@@ -13,6 +13,7 @@ module.exports = function(sockjs, connections){
       event: event,
       data: data
     });
+    //console.log(event, data);
     socket.write(res);
   }
 
@@ -38,6 +39,7 @@ module.exports = function(sockjs, connections){
       socket.on('data', function(e){
         e = JSON.parse(e);
         //console.log(e);
+        if (e.event == 'get history' || e.event == 'get room') console.log(e);
         var event = e.event;
         var data = e.data;
 
@@ -76,14 +78,14 @@ module.exports = function(sockjs, connections){
           //Returns messages list
           case 'get history':
             getHistory(data, function(messages){
-              emit(socket, 'history', messages);
+              emit(socket, 'history', {id: data, data: messages});
             });
           break;
 
           case 'get private history':
             if (typeof data == 'string') data = JSON.parse(data);
             getPrivateHistory(data.id1, data.id2, function(messages){
-              emit(socket, 'private history', messages);
+              emit(socket, 'private history', {from: data.id1, to: data.id2, data: messages});
             });
           break;
 
@@ -117,7 +119,6 @@ module.exports = function(sockjs, connections){
                 if (users[i].user._id == msg.to)
                 {
                   emit(users[i].socket, 'new private message', msg);
-                  break;
                 }
               emit(socket, 'new private message', msg);
               broadcast('listener event', msg);
@@ -132,6 +133,7 @@ module.exports = function(sockjs, connections){
 
           case 'get room':
             Room.findById(data, function(err, room){
+              console.log('room: ', room);
               //if (err) return console.log(err);
               if (!room) room = '404';
               emit(socket, 'room', room);
@@ -143,12 +145,11 @@ module.exports = function(sockjs, connections){
           break;
 
           case 'delete room':
-            var id = data;
-            Room.findById(id).remove(function(err){
+            Room.findById(data).remove(function(err){
               //if (err) console.log(err);
-              updateRooms();
+              updateRooms(data);
             });
-            Message.find({room: id}).remove(function(err){
+            Message.find({room: data}).remove(function(err){
               //if (err) console.log(err);
             });
           break;
@@ -195,7 +196,7 @@ module.exports = function(sockjs, connections){
             User.findById(data, function(err, user){
               //if (err) return console.log(err);
               if (!user) user = '404';
-              if (user) emit(socket, 'user', user);
+              emit(socket, 'user', user);
             });
           break;
 
@@ -208,18 +209,11 @@ module.exports = function(sockjs, connections){
 
       //Disconnect
       socket.on('close', function(){
-        console.log('disconnected');
         disconnect(socket);
-        var ind = 0;
+        for (var i in users)
+          if (users[i].socket.id == socket.id) users.splice(i, 1);
         for (var i in connections)
-        {
-          if (i == socket.id)
-          {
-            connections.split(ind, 1);
-            break;
-          }
-          ++ind;
-        }
+          if (connections[i].id == socket.id) connections.splice(i, 1);
       });
 
     });
@@ -279,6 +273,7 @@ module.exports = function(sockjs, connections){
 
   function disconnect(socket)
   {
+    console.log('disconnected');
     if (!users[socket.id]) return;
     var len = users[socket.id].rooms.length;
     for (var i = 0; i < len; ++i)
@@ -318,13 +313,14 @@ module.exports = function(sockjs, connections){
   function updateHistory(roomid)
   {
     getHistory(roomid, function(messages){
-      emitRoom(roomid, 'history', messages);
+      emitRoom(roomid, 'history', {id: roomid, data: messages});
     });
   }
 
   function getHistory(roomid, callback)
   {
     Message.find({room: roomid}, null, {sort: 'time'}, function(err, messages){
+      console.log(roomid, messages);
       //if (err) return console.log(err);
       if (messages) callback(messages);
     });

@@ -1,8 +1,9 @@
-.panel-body#chatWindow
+.panel-body
+	.div(scroll-glue-bottom='scrollGlue || false')#chatWindow
 		.row
 			.col-md-11
-				div(ng-repeat='message in messages | orderBy: message.time track by $index', scroll-glue-bottom='scrollGlue')
-					.msg(class='msg-{{message.username}}', ng-class="{'alert alert-danger': message.type==\"error\", 'alert alert-info': message.type==\"info\"}")
+				div(ng-repeat='message in messages | orderBy: message.time track by $index')
+					.msg(class='msg-{{message.username}}')
 						.time {{message.time | date : '[HH:mm:ss] '}}
 						.username {{message.username}}: 
 						.text {{message.text}}

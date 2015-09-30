@@ -53,7 +53,7 @@ router.post('/createroom', function(req, res, next){
 				sockets.updateRooms();
 				Room.findOne({name: name}, function(err, room){
 					if (err) next(err);
-					return res.end(JSON.stringify({status: 'success', id: room.id}));
+					return res.end(JSON.stringify({status: 'success', id: room._id}));
 				});
 			});
 		}

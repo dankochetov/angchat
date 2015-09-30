@@ -3,27 +3,23 @@ chatio.controller('indexCtrl', function($scope, $rootScope, $http, $route, $loca
 	$rootScope.title = ' - Main';
 
 	$scope.fb_login = function(){
+		$scope.showLoading = true;
 		FB.login(function(response){
-			if (response.status == 'connected')
-			{
-				$scope.showLoading = true;
-				window.location = '/signin/fb';
-			}
+			if (response.status == 'connected') window.location = '/signin/fb';
+			else $scope.showLoading = false;
 		});
 	}
 
 	$scope.vk_login = function(){
+		$scope.showLoading = true;
 		VK.init({
 			apiId: '5062854'
 		});
 		VK.Auth.getLoginStatus(function(response){
 			if (!response.session)
 				VK.Auth.login(function(response){
-					if (response.session)
-					{
-						$scope.showLoading = true;
-						window.location = '/signin/vk';
-					}
+					if (response.session) window.location = '/signin/vk';
+					else $scope.showLoading = false;
 				});
 			else
 			{

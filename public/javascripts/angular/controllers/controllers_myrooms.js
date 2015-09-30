@@ -7,11 +7,11 @@ chatio.controller('myroomsCtrl', function($scope, $http, $rootScope, $timeout, s
 		$timeout(function(){
 			$rootScope.user = $scope.user = response.data;
 			socket.emit('get rooms', $rootScope.user._id);
-		}, 0);
+		});
 	});
 
-	
-	$scope.$on('socket:rooms', function(event, data){
+	if ($rootScope['listeners.myrooms.rooms']) $rootScope['listeners.myrooms.rooms']();
+	$rootScope['listeners.myrooms.rooms'] = $scope.$on('socket:rooms', function(event, data){
 		$scope.loading = false;
 		$scope.rooms = data;
 	});

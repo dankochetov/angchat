@@ -30,8 +30,8 @@ script(type='text/ng-template', id='passwordModal')
 										span(ng-bind-html='$root.showUsername(friend)')
 										.caret
 									ul.dropdown-menu
-										li: a(href='', ng-click='openTab(friend._id, true)') Private chat
-										li: a(href='', ng-click='removeFriend(friend)') Remove from friends
+										li: a(href='', ng-click='openTab(friend._id, {private: true})') Private chat
+										li: a(href='', ng-click='removeFriend(friend._id)') Remove from friends
 					.text-center(ng-if='friends.length==0 && !loading_friends') You have no friends yet.
 		.col-xs-6
 			.panel.panel-default#chatWrapper
@@ -39,11 +39,12 @@ script(type='text/ng-template', id='passwordModal')
 						.row
 							.col-xs-8.col-md-11
 								tabset#tabs(type='pills')
-									tab(ng-repeat='cur in $root.tabs', ng-init='tab=cur', active='cur.active', select='$root.tab=tab')
+									tab(ng-repeat='cur in $root.tabs', ng-init='tab=cur', active='cur.active', select='tabs.active(tab.id)')
 										tab-heading
 											.glyphicon.glyphicon-user(ng-if='cur.private')  
 											|{{cur.title}}
-									tab(active='$root.rootTab.active', select='$root.tab=tab=$root.rootTab')
+											.badge(ng-if='cur.unread>0') +{{cur.unread}}
+									tab(active='$root.rootTab.active', select='tabs.active("root")')
 										tab-heading
 											.glyphicon.glyphicon-plus(ng-if='!$root.rootTab.active')
 											div(ng-if='$root.rootTab.active') New tab
@@ -55,6 +56,8 @@ script(type='text/ng-template', id='passwordModal')
 									ul.dropdown-menu(aria-labelledby='optionsMenu')
 
 										li(ng-if-start='$root.user.rank>2 && !$root.tab.private && $root.tab!=$root.rootTab'): a(href='', ng-click='clearChat()') Clear chat
+										li.divider(role='separator' ng-if-end)
+										li(ng-if-start='$root.tab.private && !isFriend($root.tab)'): a(href='', ng-click='addFriend(tab.id)') Add to friends
 										li.divider(role='separator' ng-if-end)
 										li: a(href='', ng-click='$root.closeTab($root.tab)', ng-if='$root.tab!=$root.rootTab') Close tab
 										li: a(href='', ng-click='template.go("/chat/myrooms")') My rooms
@@ -77,8 +80,8 @@ script(type='text/ng-template', id='passwordModal')
 										span(ng-bind-html='$root.showUsername(user)')
 										.caret
 									ul.dropdown-menu
-										li: a(href='', ng-click='openTab(user._id, true)') Private chat
-										li: a(href='', ng-click='addFriend(user)') Add to friends list
+										li: a(href='', ng-click='openTab(user._id, {private: false})') Private chat
+										li: a(href='', ng-click='addFriend(user._id)') Add to friends list
 									li.userlist-item(ng-if='user._id==$root.user._id')
 										span(ng-bind-html='$root.showUsername(user)')
 										.you

@@ -3,13 +3,12 @@ chatio.controller('roomCtrl', function($scope, $rootScope, $http, $timeout, $loc
 	$scope.tabInit = $q.defer();
 	$scope.usernames = [];
 	$scope.messages = [];
-	$scope.scrollGlue = true;
 	var user = $scope.user = $rootScope.user;
 
 	$scope.tabInit.promise.then(function(tab){
-		$rootScope.tab = tab;
 		socket.emit('get room', tab.id);
 		var close = $scope.$on('socket:room', function(event, room){
+			if (room._id != tab.id) return;
 			init(room);
 			close();
 		});
@@ -24,25 +23,24 @@ chatio.controller('roomCtrl', function($scope, $rootScope, $http, $timeout, $loc
 				tab.unread = 0;
 
 				socket.emit('get history', room._id);
-
-				$scope.$on('socket:reconnect', function(){
-					location.reload();
-				});
-
-				$scope.$on('socket:disconnect', function(){
-					addServerMessage('Connection lost', 'error');
-				});
-
-				var close = $scope.$on('socket:history', function(event, data){
-					$scope.messages = data;
+				if ($rootScope['listeners.room.history.' + tab.id]) $rootScope['listeners.room.history.' + tab.id]();
+				$rootScope['listeners.room.history.' + tab.id] = $scope.$on('socket:history', function(event, data){
+					if (data.id != tab.id) return;
+					$scope.messages = data.data;
 					$scope.scrollGlue = true;
-					close();
+					$timeout(function(){
+						$scope.scrollGlue = false;
+					}, 100);
 				});
 
-				$scope.$on('socket:new message', function(event, data){
+				if ($rootScope['listeners.room.message.' + tab.id]) $rootScope['listeners.room.message.' + tab.id]();
+				$rootScope['listeners.room.message.' + tab.id] = $scope.$on('socket:new message', function(event, data){
 					if (data.room != tab.id) return;
 					$scope.messages.push(data);
 					$scope.scrollGlue = true;
+					$timeout(function(){
+						$scope.scrollGlue = false;
+					}, 100);
 				});
 
 			});
@@ -70,19 +68,8 @@ chatio.controller('roomCtrl', function($scope, $rootScope, $http, $timeout, $loc
 				});
 			}
 
-			function addServerMessage(text, type)
-			{
-				$scope.$apply(function(){
-					$scope.messages.push({
-						username: 'server',
-						text: text,
-						type: type,
-						time: Date.now()
-					});
-				});
-			}
-
-			$scope.$on('clear history', function(event, id){
+			if ($rootScope['listeners.room.clearHistory.' + tab.id]) $rootScope['listeners.room.clearHistory.' + tab.id]();
+			$rootScope['listeners.room.clearHistory.' + tab.id] = $scope.$on('clear history', function(event, id){
 				if (id == room._id) $scope.messages = [];
 			});
 		}
