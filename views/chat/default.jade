@@ -80,7 +80,7 @@ script(type='text/ng-template', id='passwordModal')
 										span(ng-bind-html='$root.showUsername(user)')
 										.caret
 									ul.dropdown-menu
-										li: a(href='', ng-click='openTab(user._id, {private: false})') Private chat
+										li: a(href='', ng-click='openTab(user._id, {private: true})') Private chat
 										li: a(href='', ng-click='addFriend(user._id)') Add to friends list
 									li.userlist-item(ng-if='user._id==$root.user._id')
 										span(ng-bind-html='$root.showUsername(user)')
