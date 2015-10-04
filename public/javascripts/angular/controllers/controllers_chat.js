@@ -57,7 +57,7 @@ chatio.controller('chatCtrl', function($scope, $rootScope, $route, $routeParams,
 			unread: true
 		});
 		popup.add(data);
-		//notifySound.play();
+		notifySound.play();
 	}));
 
 	$scope.logout = function(){
