@@ -2,8 +2,7 @@ chatio.controller('headCtrl', function($rootScope, $localStorage, socket){
 	
 	socket.init();
 	$rootScope.$storage = $localStorage.$default({
-		tabs: [],
-		tab: 'root'
+		tabs: []
 	});
 
 	$rootScope.showUsername = function(user){

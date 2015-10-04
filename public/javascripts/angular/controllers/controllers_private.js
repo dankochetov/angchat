@@ -3,13 +3,19 @@ chatio.controller('privateCtrl', function($scope, $routeParams, $timeout, $q, $r
 	var companion;
 	$scope.tabInit = $q.defer();
 
+	var listeners = [];
+
+	$scope.$on('$destroy', function(event, data){
+		for (var i in listeners) listeners[i]();
+	});
+
 	$scope.messages = [];
 	$scope.scrollGlue = true;
 
 	$scope.tabInit.promise.then(function(tab){
 		socket.emit('get user', tab.id);
 
-		var close = $scope.$on('socket:user', function(event, companion){
+		var close = socket.on('user', function(companion){
 			if (companion._id != tab.id) return;
 			init(companion);
 			close();
@@ -24,18 +30,16 @@ chatio.controller('privateCtrl', function($scope, $routeParams, $timeout, $q, $r
 			
 			socket.emit('get private history', JSON.stringify({id1: $rootScope.user._id, id2: companion._id}));
 
-			if ($rootScope['listeners.private.history.' + tab.id]) $rootScope['listeners.private.history.' + tab.id]();
-			$rootScope['listeners.private.history.' + tab.id] = $scope.$on('socket:private history', function(event, data){
+			listeners.push(socket.on('private history', function(data){
 				if (data.from != $rootScope.user._id || data.to != tab.id) return;
 				$scope.messages = data.data;
 				$scope.scrollGlue = true;
-			});
-			if ($rootScope['listeners.private.message.' + tab.id]) $rootScope['listeners.private.message.' + tab.id]();
-			$rootScope['listeners.private.message.' + tab.id] = $scope.$on('socket:new private message', function(event, data){
+			}));
+			listeners.push(socket.on('new private message', function(data){
 				if ((data.to == $rootScope.user._id && data.from != tab.id) || (data.from == $rootScope.user._id && data.to != tab.id)) return;
 				$scope.messages.push(data);
 				$scope.scrollGlue = true;
-			});
+			}));
 		}
 
 	});

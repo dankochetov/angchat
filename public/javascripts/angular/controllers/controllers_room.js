@@ -1,4 +1,10 @@
-chatio.controller('roomCtrl', function($scope, $rootScope, $http, $timeout, $location, $routeParams, $q, $modal, socket, $templateCache){
+chatio.controller('roomCtrl', function($scope, $rootScope, $http, $timeout, $location, $routeParams, $q, $modal, socket, tabs){
+
+	var listeners = [];
+
+	$scope.$on('$destroy', function(event, data){
+		for (var i in listeners) listeners[i]();
+	});
 
 	$scope.tabInit = $q.defer();
 	$scope.usernames = [];
@@ -7,7 +13,7 @@ chatio.controller('roomCtrl', function($scope, $rootScope, $http, $timeout, $loc
 
 	$scope.tabInit.promise.then(function(tab){
 		socket.emit('get room', tab.id);
-		var close = $scope.$on('socket:room', function(event, room){
+		var close = socket.on('room', function(room){
 			if (room._id != tab.id) return;
 			init(room);
 			close();
@@ -23,25 +29,26 @@ chatio.controller('roomCtrl', function($scope, $rootScope, $http, $timeout, $loc
 				tab.unread = 0;
 
 				socket.emit('get history', room._id);
-				if ($rootScope['listeners.room.history.' + tab.id]) $rootScope['listeners.room.history.' + tab.id]();
-				$rootScope['listeners.room.history.' + tab.id] = $scope.$on('socket:history', function(event, data){
+
+				listeners.push(socket.on('history', function(data){
 					if (data.id != tab.id) return;
 					$scope.messages = data.data;
 					$scope.scrollGlue = true;
 					$timeout(function(){
 						$scope.scrollGlue = false;
 					}, 100);
-				});
+				}));
 
-				if ($rootScope['listeners.room.message.' + tab.id]) $rootScope['listeners.room.message.' + tab.id]();
-				$rootScope['listeners.room.message.' + tab.id] = $scope.$on('socket:new message', function(event, data){
+				listeners.push(socket.on('new message', function(data){
 					if (data.room != tab.id) return;
-					$scope.messages.push(data);
+					if (tab.id != $rootScope.tab.id) tabs.addUnread(tab.id);
 					$scope.scrollGlue = true;
 					$timeout(function(){
+						$scope.messages.push(data);
 						$scope.scrollGlue = false;
 					}, 100);
-				});
+				}));
+
 
 			});
 
@@ -68,8 +75,7 @@ chatio.controller('roomCtrl', function($scope, $rootScope, $http, $timeout, $loc
 				});
 			}
 
-			if ($rootScope['listeners.room.clearHistory.' + tab.id]) $rootScope['listeners.room.clearHistory.' + tab.id]();
-			$rootScope['listeners.room.clearHistory.' + tab.id] = $scope.$on('clear history', function(event, id){
+			$scope.$on('clear history', function(event, id){
 				if (id == room._id) $scope.messages = [];
 			});
 		}

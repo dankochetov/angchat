@@ -39,7 +39,6 @@ module.exports = function(sockjs, connections){
       socket.on('data', function(e){
         e = JSON.parse(e);
         //console.log(e);
-        if (e.event == 'get history' || e.event == 'get room') console.log(e);
         var event = e.event;
         var data = e.data;
 
@@ -49,7 +48,14 @@ module.exports = function(sockjs, connections){
           case 'new user':
             if (typeof data == 'string') data = JSON.parse(data);
             if (!rooms[data.room._id]) rooms[data.room._id] = [];
-            rooms[data.room._id].push(socket.id);
+            var f = true;
+            for (var i in rooms[data.room._id])
+              if (rooms[data.room._id][i] == socket.id)
+              {
+                f = false;
+                break;
+              }
+            if (f) rooms[data.room._id].push(socket.id);
             if (!users[socket.id])
               users[socket.id] = {
                 socket: socket,
@@ -133,7 +139,6 @@ module.exports = function(sockjs, connections){
 
           case 'get room':
             Room.findById(data, function(err, room){
-              console.log('room: ', room);
               //if (err) return console.log(err);
               if (!room) room = '404';
               emit(socket, 'room', room);
@@ -145,11 +150,12 @@ module.exports = function(sockjs, connections){
           break;
 
           case 'delete room':
-            Room.findById(data).remove(function(err){
+            if (typeof(data) == 'string') data = JSON.parse(data);
+            Room.findById(data.roomid).remove(function(err){
               //if (err) console.log(err);
-              updateRooms(data);
+              updateRooms(data.userid);
             });
-            Message.find({room: data}).remove(function(err){
+            Message.find({room: data.roomid}).remove(function(err){
               //if (err) console.log(err);
             });
           break;
@@ -320,7 +326,6 @@ module.exports = function(sockjs, connections){
   function getHistory(roomid, callback)
   {
     Message.find({room: roomid}, null, {sort: 'time'}, function(err, messages){
-      console.log(roomid, messages);
       //if (err) return console.log(err);
       if (messages) callback(messages);
     });

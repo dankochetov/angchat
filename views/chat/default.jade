@@ -38,8 +38,8 @@ script(type='text/ng-template', id='passwordModal')
 				.panel-heading
 						.row
 							.col-xs-8.col-md-11
-								tabset#tabs(type='pills')
-									tab(ng-repeat='cur in $root.tabs', ng-init='tab=cur', active='cur.active', select='tabs.active(tab.id)')
+								tabset#tabs(type='pills', ng-if='tabsLoaded')
+									tab(ng-repeat='cur in $root.tabs', ng-init='tab=cur', active='cur.active', select='tabs.active(cur.id)')
 										tab-heading
 											.glyphicon.glyphicon-user(ng-if='cur.private')  
 											|{{cur.title}}
@@ -60,7 +60,7 @@ script(type='text/ng-template', id='passwordModal')
 										li(ng-if-start='$root.tab.private && !isFriend($root.tab)'): a(href='', ng-click='addFriend(tab.id)') Add to friends
 										li.divider(role='separator' ng-if-end)
 										li: a(href='', ng-click='$root.closeTab($root.tab)', ng-if='$root.tab!=$root.rootTab') Close tab
-										li: a(href='', ng-click='template.go("/chat/myrooms")') My rooms
+										li: a(href='', ng-click='template.go("/chat/myrooms", scope)') My rooms
 										li: a(href='', ng-click='logout()') Logout
 				div(ng-repeat='cur in $root.tabs')
 					span(ng-if='cur.private', ng-controller='privateCtrl', ng-show='cur.active')

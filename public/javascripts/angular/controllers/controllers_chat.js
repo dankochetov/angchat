@@ -1,5 +1,11 @@
 chatio.controller('chatCtrl', function($scope, $rootScope, $route, $routeParams, $http, $location, $timeout, socket, ngAudio, popup, autoLogout, tabs){
 
+	var listeners = [];
+
+	$scope.$on('$destroy', function(event, data){
+		for (var i in listeners) listeners[i]();
+	});
+
 	$scope.tabs = tabs;
 
 	$scope.friends = [];
@@ -10,10 +16,9 @@ chatio.controller('chatCtrl', function($scope, $rootScope, $route, $routeParams,
 		userInit();
 	});
 
-	if ($rootScope['listeners.chat.users']) $rootScope['listeners.chat.users']();
-	$rootScope['listeners.chat.users'] = $scope.$on('socket:users', function(event, users){
+	listeners.push(socket.on('users', function(users){
 		$scope.users = users;
-	});
+	}));
 
 	$scope.$on('rendering finished', function(){
 		dropdownSlide();
@@ -21,14 +26,14 @@ chatio.controller('chatCtrl', function($scope, $rootScope, $route, $routeParams,
 
 	function userInit()
 	{
-		socket.emit('get friends', $rootScope.user._id);
-		if ($rootScope['listeners.chat.friends']) $rootScope['listeners.chat.friends']();
-		$rootScope['listeners.chat.friends'] = $scope.$on('socket:friends', function(event, friends){
-			$scope.loading_friends = false;
-			$scope.friends = friends;
-		});
+	socket.emit('get friends', $rootScope.user._id);
+	listeners.push(socket.on('friends', function(friends){
+		$scope.loading_friends = false;
+		$scope.friends = friends;
+	}));
 
 		tabs.init();
+		$scope.tabsLoaded = true;
 	}
 
 	$scope.addFriend = function(id){
@@ -44,8 +49,7 @@ chatio.controller('chatCtrl', function($scope, $rootScope, $route, $routeParams,
 	$rootScope.popups = popup.list;
 
 	var notifySound = ngAudio.load('../sounds/notify.mp3');
-	if ($rootScope['listeners.chat.listenerEvent']) $rootScope['listeners.chat.listenerEvent']();
-	$rootScope['listeners.chat.listenerEvent'] = $scope.$on('socket:listener event', function(event, data){
+	listeners.push(socket.on('listener event', function(data){
 		if (data.to != $rootScope.user._id || $rootScope.tab.id == data.from) return;
 		$scope.openTab(data.from, {
 			private: true,
@@ -54,13 +58,13 @@ chatio.controller('chatCtrl', function($scope, $rootScope, $route, $routeParams,
 		});
 		popup.add(data);
 		//notifySound.play();
-	});
+	}));
 
 	$scope.logout = function(){
 		$http.get('/logout');
 	}
 
-	$scope.openTab = function(id, params, callback){
+	$scope.openTab = function(id, params){
 		if (!params) params = {};
 		if (params.open == null) params.open = true;
 		var createNew = true;
@@ -75,34 +79,34 @@ chatio.controller('chatCtrl', function($scope, $rootScope, $route, $routeParams,
 			if (params.private)
 			{
 				socket.emit('get user', id);
-				var close = $scope.$on('socket:user', function(event, user){
-					if (user == '404') return;
+				var close = socket.on('user', function(user){
+					if (user == '404' || id != user._id) return;
 					var newTab = {
+						active: params.open || false,
 						unread: params.unread ? 1 : 0,
 						title: user.username,
 						id: id,
 						url: '/chat/user/' + id,
 						private: true
 					};
-					tabs.open(newTab, callback);
-					if (params.open) tabs.active(id);
+					tabs.open(newTab);
 					close();
 				});
 			}
 			else
 			{
 				socket.emit('get room', id);
-				var close = $scope.$on('socket:room', function(event, room){
+				var close = socket.on('room', function(room){
 					if (room == '404') return;
 					var newTab = {
+						active: params.open || false,
 						unread: params.unread ? 1 : 0,
 						title: room.name,
 						id: id,
 						url: '/chat/room/' + id,
 						private: false
 					};
-					tabs.open(newTab, callback);
-					if (params.open) tabs.active(id);
+					tabs.open(newTab);
 					close();
 				});
 			}
@@ -117,15 +121,17 @@ chatio.controller('chatCtrl', function($scope, $rootScope, $route, $routeParams,
 	$rootScope.closeTab = function(tab){
 		if (!tab.private)
 			socket.emit('leave room', tab.id);
-		var pos = tabs.close(tab.id);
-		if (pos > 0) tabs.active(pos - 1);
-		else if (pos < tabs.count() - 1) tabs.active(pos + 1);
-		else tabs.active('root');
+		var count = tabs.count();
+		tabs.close(tab.id, function(pos){
+			if (pos > 0) tabs.active(pos - 1);
+			else if (pos < count - 1) tabs.active(pos + 1);
+			else tabs.active('root');
+		});
 	}
 
 	$scope.clearChat = function(){
-		socket.emit('clear history', $scope.tab.id);
-		$scope.$broadcast('clear history', $scope.tab.id);
+		socket.emit('clear history', $rootScope.tab.id);
+		$scope.$broadcast('clear history', $rootScope.tab.id);
 	}
 });
 
@@ -138,4 +144,5 @@ chatio.controller('sendMsgCtrl', function($scope, $rootScope, socket){
 			socket.emit('send message', JSON.stringify({roomid: $rootScope.tab.id, msg: msg}));
 		$scope.msg = '';
 	}
+
 });
