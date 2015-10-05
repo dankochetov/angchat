@@ -1,0 +1,30 @@
+extends ../layout
+
+block content
+	.row(ng-controller='myroomsCtrl', ng-init='$root.title = " - My rooms"', ng-cloak)
+		.col-sm-6.col-sm-offset-3.col-xs-12
+			.panel.panel-default
+				.panel-heading
+					h2 My rooms 
+						a.btn.btn-default(href='/myrooms/create') Create room
+						.pull-right
+							include backBtn
+				.panel-body(ng-show='rooms.length==0')
+					div.text-center(ng-show='rooms.length==0 && !loading') You haven't created any rooms yet
+					div.text-center(ng-show='loading') Loading rooms...
+				table.table.table-bordered.table-hover.table-responsive(ng-show='rooms.length>0')
+					tr.info
+						th.col-xs-8 Name
+						th.col-xs-1.text-center Delete
+						th.col-xs-1.text-center Online
+					tr(ng-repeat='room in rooms | orderBy: "-online"')
+						td
+							a(href='/main/#/{{room._id}}', title='Join this room') {{room.name}}
+							| 
+							.glyphicon.glyphicon-lock(ng-show='room.protect', title='This room is protected with password')
+						td.text-center
+							button.btn.btn-danger.btn-xs(ng-show='room.online==0', ng-click='delete(room)')
+								.glyphicon.glyphicon-remove
+							button.btn.btn-danger.btn-xs(ng-show='room.online>0', disabled, title='You can only remove an empty room')
+								.glyphicon.glyphicon-remove
+						td.text-center {{room.online}}

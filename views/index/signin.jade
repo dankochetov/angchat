@@ -1,0 +1,21 @@
+.panel.panel-default#login(ng-init='$root.title=" - Sign in"', ng-controller='signinCtrl')
+	.panel-heading
+		h3 Logging in
+			include ../loading
+			.pull-right
+				include backBtn
+	.panel-body
+		include ../errors
+		form(ng-submit='submit()', autocomplete='off')
+			.row
+				.col-sm-6.col-sm-offset-3
+					.form-group
+						input.form-control(type='text', ng-model='formData.login', placeholder='Login')
+			.form-group
+				.row
+					.col-sm-6.col-sm-offset-3
+						input.form-control(type='password', ng-model='formData.password', placeholder='Password')
+			.form-group
+				.row
+					.col-sm-6.col-sm-offset-3
+						button.btn.btn-login.form-control(type='submit') Sign in

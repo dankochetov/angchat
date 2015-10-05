@@ -1,0 +1,73 @@
+extend ../layout
+
+block content			
+	script(src='/javascripts/routes_main.js')
+	script(src='/javascripts/controllers_main.js')
+	#mainWrapper(ng-cloak, ng-controller='mainCtrl')
+		.row
+			.col-xs-3
+				.panel.panel-default#friendsWrapper
+					.panel-heading.text-center Friends
+					.panel-body
+						span(ng-show='friends.length>0')
+							.input-group#search
+								.input-group-addon
+									.glyphicon.glyphicon-search
+								input.filter.form-control(type='text', ng-model='filterFriends')
+							br
+							.inner
+								ul.list-unstyled
+									.dropdown(ng-repeat='friend in friends track by $index' action-on-finish)
+										li.userlist-item.dropdown-toggle(data-toggle='dropdown', aria-haspopup='true', aria-expanded='true', ng-click='setSelection(friend)', ) {{friend.username}}
+											.caret
+										ul.dropdown-menu
+											li: a(href='#/user/{{friend._id}}') Private chat
+											li: a(href='', ng-click='removeFriend()') Remove from friends
+						.text-center(ng-show='friends.length==0') You have no friends yet.
+			.col-xs-6
+				.panel.panel-default#chatWrapper
+					.panel-heading
+							.row
+								#tabs-list
+									.col-xs-8.col-md-11
+										.nav.nav-pills#tabs(role='tablist')
+											li(ng-repeat='cur in $root.sockets', ng-class='{active: checkActiveTab(cur)}')
+												a(href='#/{{(cur.private?"user/":"")+cur.room._id}}')
+													.glyphicon.glyphicon-user(ng-show='cur.private')
+													span(ng-show='cur.room._id=="/"')
+														span(ng-show='$root.room._id!="/"') New tab
+													span(ng-show='cur.room._id!="/"') {{cur.private?cur.room.username:cur.room.name}}
+													.badge(ng-show='cur.unread>0') {{'+'+cur.unread}}
+											li(ng-class='{active: checkActiveTab($root.roomsSocket)}')
+												a(href='#/')
+													.glyphicon.glyphicon-plus(ng-show='$root.room._id!="/"')
+													span(ng-show='$root.room._id=="/"') New tab
+
+								.col-xs-4.col-md-1
+									.dropdown.pull-right
+										.button.btn.btn-default.dropdown-toggle(id='optionsMenu', data-toggle='dropdown', aria-haspopup='true', aria-expanded='true')
+											|Options 
+											.span.caret
+										ul.dropdown-menu(aria-labelledby='optionsMenu')
+											li: a(href='', ng-click='clearChat()', ng-show='$root.user.rank > 2 && $root.isRoom') Clear chat
+											li.divider(role='separator', ng-show='$root.user.rank > 2 && $root.isRoom')
+											li: a(href='', ng-click='leave($root.room._id)', ng-show='$root.room._id!="/"') Close tab
+											li: a(href='/myrooms') My rooms
+											li: a(href='/logout') Logout
+						ng-view
+			div(ng-class='{"col-xs-3": $root.isRoom, "hidden": !$root.isRoom}')
+				.panel.panel-default#userWrapper(ng-show='$root.isRoom')
+					.panel-heading
+						.text-center In this room
+					.panel-body
+						.inner
+							ul.list-unstyled
+								.dropdown(ng-repeat='user in users' action-on-finish)
+										li.userlist-item.dropdown-toggle(data-toggle='dropdown', aria-haspopup='true', aria-expanded='true', ng-click='setSelection(user)', ng-show='user._id!=$root.user._id') {{user.username}}
+											.caret
+										ul.dropdown-menu
+											li: a(href='#/user/{{user._id}}') Private chat
+											li: a(href='', ng-click='addFriend()') Add to friends list
+										li(ng-show='user._id==$root.user._id') {{user.username}}
+											.you
+		include ../popups

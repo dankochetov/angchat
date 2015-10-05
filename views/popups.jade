@@ -1,0 +1,10 @@
+.popup-list
+		.popup(ng-repeat='popup in $root.popups.slice().reverse()')
+			.close-button(ng-click='$root.popups.splice($index, 1)')
+					.glyphicon.glyphicon-remove
+			a(href='', ng-click='openTab(popup.from); $root.popups.splice($index, 1)')
+				.popup-inner
+					.head(ng-show='popup.username')
+						.username {{popup.username}}
+					.body
+						.text(ng-show='popup.text') {{popup.text}}

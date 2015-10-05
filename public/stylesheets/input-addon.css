@@ -1,0 +1,12 @@
+#search .input-group-addon {
+  background-color: rgba(0, 0, 0, 0);
+  padding: 0 2px 0 5px !important;
+  pointer-events: none;
+  color: gray;
+  font-size: 0.8em;
+}
+
+#search input {
+	padding-left: 2px;
+	height: 20px;
+}

@@ -1,0 +1,16 @@
+.panel-body
+	.div(scroll-glue-bottom='scrollGlue || false')#chatWindow
+		.row
+			.col-md-11
+				div(ng-repeat='message in messages | orderBy: message.time track by $index')
+					.msg(class='msg-{{message.username}}')
+						.time {{message.time | date : '[HH:mm:ss] '}}
+						.username {{message.username}}: 
+						.text {{message.text}}
+	form#messageForm(ng-submit='submit(msg)', novalidate, name='messageForm', ng-controller='sendMsgCtrl')
+		.form-group
+			.input-group
+				.input-group-addon Say:
+				input.form-control#message(size=35, ng-model='msg', required, ng-change='scrollGlue=false', autocomplete='off' autofocus)
+				.input-group-btn
+					button.btn.btn-info(type='submit') Send

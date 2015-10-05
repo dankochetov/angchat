@@ -1,0 +1,33 @@
+extends ../layout
+
+block content
+	.row(ng-init='$root.title=" - Create room"', ng-controller='createroomCtrl')
+		.col-sm-6.col-sm-offset-3.col-xs-12
+			.panel.panel-default
+				.panel-heading
+					h2 Create room
+						include ../loading
+						.pull-right
+							include backBtn
+				.panel-body
+					include ../errors
+					form(ng-submit='submit()', autocomplete='off')
+						input.hidden(type='text')
+						input.hidden(type='password')
+						.form-group
+							label Name
+							input.form-control(type='text', ng-model='formData.name')
+						.form-group
+							label Description
+							textarea.form-control(ng-model='formData.description')
+						.checkbox
+							label
+								input(type='checkbox', ng-model='formData.protect')
+								|Protect room with password
+						.form-group(ng-show='formData.protect')
+							label Password
+							input.form-control(type='password', ng-model='formData.password')
+						.form-group
+							.row
+								.col-xs-12.col-md-4.col-md-offset-4
+									button.btn.btn-success.form-control(type='submit') Create
