@@ -45,6 +45,8 @@ chatio.factory 'tabs', ['$rootScope', '$timeout', '$localStorage', '$q', ($rootS
       if callback then callback()
 
     open: (data, callback) ->
+      for tab in $rootScope.tabs
+        if tab.id == data.id then return
       $timeout ->
         data.tabInit = $q.defer()
         $rootScope.tabs.push data

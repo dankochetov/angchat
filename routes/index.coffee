@@ -14,18 +14,16 @@ router.get '/', (req, res, next) ->
   else
     res.render 'index/index'
 
-router.get '/index', (req, res, next) ->
-  res.render 'index/default'
+router.get '/index', (req, res, next) -> res.render 'index/default'
 
-router.get '/signin', (req, res, next) ->
-  res.render 'index/signin'
+router.get '/signin', (req, res, next) -> res.render 'index/signin'
 
-router.get '/signin/fb', passport.authenticate('facebook')
+router.get '/signin/fb', passport.authenticate 'facebook'
 router.get '/signin/fb/cb', passport.authenticate('facebook', failureRedirect: '/'), (req, res, next) ->
   require('../sockets')(req.app.locals.sockjs, req.app.locals.connections).autoLogin()
   res.redirect '/'
 
-router.get '/signin/vk', passport.authenticate('vkontakte')
+router.get '/signin/vk', passport.authenticate 'vkontakte'
 router.get '/signin/vk/cb', passport.authenticate('vkontakte', failureRedirect: '/'), (req, res, next) ->
   require('../sockets')(req.app.locals.sockjs, req.app.locals.connections).autoLogin()
   res.redirect '/'
@@ -34,18 +32,13 @@ router.post '/signin', (req, res, next) ->
   req.checkBody('login', 'Login field is empty!').notEmpty()
   req.checkBody('password', 'Password field is empty!').notEmpty()
   errors = req.validationErrors()
-  if errors
-    return res.end(JSON.stringify(errors))
+  if errors then return res.end(JSON.stringify(errors))
   passport.authenticate('local', (err, user, info) ->
-    if info
-      errors = [{msg: info.error}]
-    if err
-      return next(err)
-    if !user
-      return res.end(JSON.stringify(errors))
+    if info then errors = [{msg: info.error}]
+    if err then return next(err)
+    if !user then return res.end(JSON.stringify(errors))
     req.logIn user, (err) ->
-      if err
-        return next(err)
+      if err then return next(err)
       require('../sockets')(req.app.locals.sockjs, req.app.locals.connections).autoLogin()
       res.end 'success'
 
@@ -60,8 +53,7 @@ router.get '/signup', (req, res, next) ->
 router.post '/signup', (req, res, next) ->
   login = req.body.login
   username2 = username = req.body.username
-  if !username
-    username = login
+  if !username then username = login
   password = req.body.password
   password2 = req.body.password2
   req.checkBody('login', 'Login field is empty!').notEmpty()
@@ -71,14 +63,10 @@ router.post '/signup', (req, res, next) ->
   err = {}
   console.log 'here'
   User.findOne { login: login }, (err, user) ->
-    `var user`
-    if err
-      next err
+    if err then next err
     errors = req.validationErrors()
-    if !errors
-      errors = []
-    if user
-      errors.push msg: 'User already exists!'
+    if !errors then errors = []
+    if user then errors.push msg: 'User already exists!'
     if errors.length > 0
       res.end JSON.stringify(errors)
     else
@@ -87,13 +75,12 @@ router.post '/signup', (req, res, next) ->
         username: username
         password: password)
       user.save (err) ->
-        if err
-          return next(err)
+        if err then return next(err)
         req.logIn user, (err) ->
           if err
             return next(err)
           require('../sockets')(req.app.locals.sockjs, req.app.locals.connections).autoLogin()
-          res.end 'registered'
+          res.end 'success'
 
 router.get '/logout', (req, res, next) ->
   if req.isAuthenticated()
