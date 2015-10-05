@@ -8,17 +8,20 @@ chatio.factory 'tabs', ['$rootScope', '$timeout', '$localStorage', '$q', ($rootS
   active = (id, callback, params = {}) ->
     tabsInit.promise.then ->
       $timeout ->
-        $rootScope.rootTab.active = id == 'root'
         if id == 'root'
+          $rootScope.rootTab.active = true
           $rootScope.tab = $rootScope.rootTab
+          $rootScope.title = ' - ' + $rootScope.rootTab.title
         else
-          for num of $rootScope.tabs
-            $rootScope.tabs[num].active = false if params.force
+          for tab, num in $rootScope.tabs
+            if params.force then $rootScope.tabs[num].active = false
             if $rootScope.tabs[num].id == id
+              tab.tabInit.resolve tab
+              $rootScope.title = ' - ' + $rootScope.tabs[num].title
               $rootScope.tabs[num].active = true
               $rootScope.tab = $rootScope.tabs[num]
               $rootScope.tab.unread = 0
-              break if !params.force
+              if !params.force then break
         callback() if callback
         flush()
 
@@ -33,16 +36,19 @@ chatio.factory 'tabs', ['$rootScope', '$timeout', '$localStorage', '$q', ($rootS
   {
     init: (callback) ->
       $rootScope.tabs = $rootScope.$storage.tabs
+      for tab in $rootScope.tabs
+        tab.tabInit = $q.defer()
+        if !tab.protect then tab.tabInit.resolve tab
       $rootScope.rootTab = $rootScope.$storage.rootTab or $rootScope.rootTab
       $rootScope.tab = $rootScope.$storage.tab or $rootScope.rootTab
       tabsInit.resolve()
-      callback() if callback
+      if callback then callback()
 
     open: (data, callback) ->
       $timeout ->
+        data.tabInit = $q.defer()
         $rootScope.tabs.push data
-        if data.active
-          active data.id, callback, force: true
+        if data.active then active data.id, callback, force: true
 
     close: (id, callback) ->
       tabsInit.promise.then ->
@@ -52,7 +58,7 @@ chatio.factory 'tabs', ['$rootScope', '$timeout', '$localStorage', '$q', ($rootS
             $timeout ->
               $rootScope.tabs.splice res, 1
               flush()
-              callback(res) if callback
+              if callback then callback(res)
 
     active: active
     addUnread: (id, callback) ->

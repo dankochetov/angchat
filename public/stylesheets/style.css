@@ -220,3 +220,11 @@ li.userlist-item.dropdown-toggle {
 .userlist-item img {
 	width: 12px;
 }
+
+#roomsList tr {
+	cursor: pointer;
+}
+
+.modal-header h3 {
+	margin: 0 !important;
+}

@@ -83,7 +83,7 @@ getuser = require('./routes/api/getuser')
 app = express()
 
 # view engine setup
-app.set 'port', process.env.PORT or 5000
+app.set 'port', process.env.PORT or 3000
 app.set 'views', path.join(__dirname, 'views')
 app.set 'view engine', 'jade'
 

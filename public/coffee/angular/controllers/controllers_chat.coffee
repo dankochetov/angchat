@@ -79,7 +79,7 @@ chatio.controller 'chatCtrl', ['$scope', '$rootScope', '$route', '$routeParams',
       else
         socket.emit 'get room', id
         close = socket.on 'room', (room) ->
-          if room == '404' then return 
+          if room == '404' then return
           newTab = 
             active: params.open or false
             unread: if params.unread then 1 else 0
@@ -87,6 +87,7 @@ chatio.controller 'chatCtrl', ['$scope', '$rootScope', '$route', '$routeParams',
             id: id
             url: '/chat/room/' + id
             private: false
+            protect: room.protect or false
           tabs.open newTab
           close()
     else
