@@ -29,6 +29,7 @@
     "morgan": "~1.6.1",
     "passport": "*",
     "passport-facebook": "*",
+    "passport-vkontakte": "*",
     "passport-local": "*",
     "serve-favicon": "~2.3.0",
     "sockjs": "*"
