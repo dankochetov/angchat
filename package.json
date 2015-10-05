@@ -27,6 +27,7 @@
     "jade": "~1.11.0",
     "mongodb": "*",
     "mongoose": "*",
+    "mongoose-findorcreate": "*",
     "morgan": "~1.6.1",
     "passport": "*",
     "passport-facebook": "*",
