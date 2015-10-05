@@ -24,11 +24,13 @@ chatio.controller 'privateCtrl', ['$scope', '$routeParams', '$timeout', '$q', '$
           return if data.from != $rootScope.user._id or data.to != tab.id
           $scope.messages = data.data
           $scope.scrollGlue = true
+          $timeout (-> $scope.scrollGlue = false), 100
 
         listeners.push socket.on 'new private message', (data) ->
           return if data.to == $rootScope.user._id and data.from != tab.id or data.from == $rootScope.user._id and data.to != tab.id
           $scope.messages.push data
           $scope.scrollGlue = true
+          $timeout (-> $scope.scrollGlue = false), 100
 
       socket.emit 'get user', tab.id
       close = socket.on 'user', (companion) ->

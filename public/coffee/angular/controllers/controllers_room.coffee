@@ -49,11 +49,9 @@ chatio.controller 'roomCtrl', ['$scope', '$rootScope', '$http', '$timeout', '$lo
           listeners.push socket.on 'new message', (data) ->
             return if data.room != tab.id
             tabs.addUnread(tab.id) if tab.id != $rootScope.tab.id
+            $scope.messages.push data
             $scope.scrollGlue = true
-            $timeout (->
-              $scope.messages.push data
-              $scope.scrollGlue = false
-            ), 100
+            $timeout (->$scope.scrollGlue = false), 100
 
         $scope.$on 'clear history', (event, id) ->
           $scope.messages = [] if id == room._id
