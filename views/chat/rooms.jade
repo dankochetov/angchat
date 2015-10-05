@@ -11,6 +11,8 @@ table.table.table-bordered.table-hover.table-responsive#roomsList(ng-show='rooms
 	tr(ng-repeat='room in rooms | orderBy: "-online"', ng-click='openTab(room._id)', action-on-finish)
 		td {{room.name}} 
 			.glyphicon.glyphicon-lock(ng-show='room.protect', data-toggle='tooltip', title='This room is protected with password')
-		td {{room.description}}
+		td
+			span(ng-if='room.description!=""') {{room.description}}
+			span(ng-if='room.description==""'): i No description
 		td(ng-init='getUser(room.owner)') {{users[room.owner].username}}
 		td.text-center {{room.online}}

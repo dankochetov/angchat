@@ -22,26 +22,20 @@ router.post '/createroom', (req, res, next) ->
   name = req.body.name
   description = req.body.description
   protect = req.body.protect
-  if protect
-    password = req.body.password
+  if protect then password = req.body.password
 
   req.checkBody('name', 'Name field is empty!').notEmpty()
-  req.checkBody('description', 'Description field is empty!').notEmpty()
-  if protect
-    req.checkBody('password', 'Password field is empty!').notEmpty()
+  if protect then req.checkBody('password', 'Password field is empty!').notEmpty()
 
   errors = req.validationErrors()
 
-  if errors
-    return res.end JSON.stringify
+  if errors then return res.end JSON.stringify
       status: 'error'
       errors: errors
 
   Room.findOne {name: name}, (err, room) ->
-    if err
-      return next(err)
-    if room
-      return res.end(JSON.stringify(
+    if err then return next(err)
+    if room then return res.end(JSON.stringify(
         status: 'error'
         errors: [ { msg: 'Room with this name already exists!' } ]))
     else
@@ -53,12 +47,10 @@ router.post '/createroom', (req, res, next) ->
         owner: req.user._id
         users: JSON.parse('{"' + req.user._id + '": 4}'))
       room.save (err) ->
-        if err
-          return next(err)
+        if err then return next(err)
         sockets.updateRooms()
         Room.findOne { name: name }, (err, room) ->
-          if err
-            next err
+          if err then next err
           res.end JSON.stringify(
             status: 'success'
             id: room._id)
@@ -75,8 +67,7 @@ router.get '/room/:room', (req, res, next) ->
 
 router.get '/user/:user', (req, res, next) ->
   User.findById req.params.user, (err, user) ->
-    if err or !user
-      return res.redirect('/rooms')
+    if err or !user then return res.redirect('/rooms')
 
   res.render 'chat/room'
 
