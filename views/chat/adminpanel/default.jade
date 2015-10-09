@@ -52,7 +52,7 @@ include ../../loading
 							span(ng-if='changingRank[user._id]')
 								+loading('black')
 							.dropdown
-								button.btn.btn-default.btn-sm.dropdown-toggle(type='button', data-toggle='dropdown', aria-haspopup='true', aria-expanded='false', ng-class='{"disabled": user._id==$root.user._id}')
+								button.btn.btn-default.btn-sm.dropdown-toggle(type='button', data-toggle='dropdown', aria-haspopup='true', aria-expanded='false', ng-class='{"disabled": user._id==$root.user._id||$root.user.rank<=user.rank}')
 									|{{user.rank}} ({{ranks[user.rank-1]}}) 
 									.caret
 								ul.dropdown-menu
