@@ -2,6 +2,11 @@ chatio.controller 'indexCtrl', ['$scope', '$rootScope', '$http', '$route', 'auto
 
   $rootScope.title = ' - Main'
 
+  $http.get('/getuser').then (response) ->
+    if response.data != '401'
+      template.go '/chat'
+      template.clear()
+
   $scope.fb_login = ->
     $scope.showLoading = true
     FB.login (response) ->
