@@ -6,7 +6,7 @@ module.exports = (grunt) ->
 				options:
 					shorthandCompacting: false
 					roundingPrecision: -1
-				src: 'public/stylesheets/*.css'
+				src: ['public/stylesheets/*.css', '!public/stylesheets/all.css']
 				dest: 'public/stylesheets/all.css'
 		coffee:
 			compile:

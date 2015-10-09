@@ -16,6 +16,6 @@ chatio.controller 'createroomCtrl', ['$scope', '$http', '$location', 'template',
           private: false
         tabs.open newTab, ->
           $scope.showLoading = false
-          template.go '/'
+          template.go '/chat'
 
 ]

@@ -1,25 +1,30 @@
-chatio.controller 'chatCtrl', ['$scope', '$rootScope', '$route', '$routeParams', '$http', '$location', '$timeout', 'socket', 'ngAudio', 'popup', 'autoLogout', 'tabs', ($scope, $rootScope, $route, $routeParams, $http, $location, $timeout, socket, ngAudio, popup, autoLogout, tabs) ->
-  listeners = []
+chatio.controller 'chatCtrl', ['$scope', '$rootScope', '$route', '$routeParams', '$http', '$location', '$timeout', 'socket', 'ngAudio', 'popup', 'autoLogout', 'tabs', 'template', ($scope, $rootScope, $route, $routeParams, $http, $location, $timeout, socket, ngAudio, popup, autoLogout, tabs, template) ->
 
+  listeners = []
+  $scope.$on '$destroy', ->
+    for listener in listeners
+      listener()
+      
   userInit = ->
     socket.emit 'get friends', $rootScope.user._id
     listeners.push socket.on 'friends', (friends) ->
       $scope.loading_friends = false
       $scope.friends = friends
-
     tabs.init()
     $scope.tabsLoaded = true
 
-  $scope.$on '$destroy', (event, data) ->
-    for listener in listeners
-      listener()
+  
 
   $scope.tabs = tabs
   $scope.friends = []
   $scope.loading_friends = true
   $http.get('/getuser').then (response) ->
-    $rootScope.user = response.data
-    userInit()
+    if response.data == '401'
+      template.go('/index')
+      template.clear()
+    else
+      $rootScope.user = response.data
+      userInit()
 
   listeners.push socket.on 'users', (users) ->
     $scope.users = users

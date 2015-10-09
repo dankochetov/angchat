@@ -1,7 +1,8 @@
 .panel.panel-default#login(ng-init='$root.title=" - Sign in"', ng-controller='signinCtrl')
 	.panel-heading
 		h3 Logging in
-			include ../loading
+			span(ng-if='showLoading')
+				include ../loading
 			.pull-right
 				include backBtn
 	.panel-body

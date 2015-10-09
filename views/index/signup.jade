@@ -1,7 +1,8 @@
 .panel.panel-default#login(ng-init='$root.title=" - Sign up"', ng-controller='signupCtrl')
 	.panel-heading
 		h3 Registration
-			include ../loading
+			span(ng-if='showLoading')
+				include ../loading
 			.pull-right
 				include backBtn
 	.panel-body

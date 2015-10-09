@@ -1,0 +1,36 @@
+.btn-login {
+  background-color: #738087;
+  border-color: #738087;
+}
+
+.btn-login,
+.btn-login:hover,
+.btn-login:focus,
+.btn-login:active,
+.btn-login.active {
+  color: white;
+}
+
+.btn-login:hover,
+.btn-login:focus,
+.btn-login:active,
+.btn-login.active {
+  background-color: #677379;
+  border-color: #5c666b;
+}
+
+.btn-login.disabled:hover,
+.btn-login.disabled:focus,
+.btn-login.disabled:active,
+.btn-login.disabled.active,
+.btn-login[disabled]:hover,
+.btn-login[disabled]:focus,
+.btn-login[disabled]:active,
+.btn-login[disabled].active,
+fieldset[disabled] .btn-login:hover,
+fieldset[disabled] .btn-login:focus,
+fieldset[disabled] .btn-login:active,
+fieldset[disabled] .btn-login.active {
+  background-color: #738087;
+  border-color: #738087;
+}

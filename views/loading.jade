@@ -1,5 +1,5 @@
-span(ng-if='showLoading')
-	.sk-fading-circle
+mixin loading(color)
+	.sk-fading-circle(class='color-#{color}')
 		- var i = 1
 		while i <= 12
 			.sk-circle(class='sk-circle#{i++}')

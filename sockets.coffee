@@ -73,8 +73,7 @@ module.exports = (sockjs, connections) ->
                 data: messages
 
           when 'get private history'
-            if typeof data == 'string'
-              data = JSON.parse(data)
+            if typeof data == 'string' then data = JSON.parse data
             getPrivateHistory data.id1, data.id2, (messages) ->
               emit socket, 'private history',
                 from: data.id1
@@ -83,8 +82,7 @@ module.exports = (sockjs, connections) ->
 
           #Send message
           when 'send message'
-            if typeof data == 'string'
-              data = JSON.parse(data)
+            if typeof data == 'string' then data = JSON.parse data
             msg = 
               text: data.msg
               room: data.roomid
@@ -121,24 +119,28 @@ module.exports = (sockjs, connections) ->
               room = '404' unless room?
               emit socket, 'room', room
 
-          when 'get rooms' then updateRooms data
+          when 'get rooms' then updateRooms()
 
           when 'delete room'
-            if typeof data == 'string'
-              data = JSON.parse(data)
+            if typeof data == 'string' then data = JSON.parse(data)
             Room.findById(data.roomid).remove (err) ->
               #if (err) console.log(err);
-              updateRooms data.userid
+              updateRooms()
             Message.find(room: data.roomid).remove (err) ->
               #if (err) console.log(err);
+
+          when 'admin:delete room'
+            Room.findById(data).remove ->
+              broadcast 'kick', data
+              updateRooms()
+              Message.find(room: data).remove()
 
           when 'comment' then console.log data
 
           when 'get friends' then updateFriends socket, data
 
           when 'add friend'
-            if typeof data == 'string'
-              data = JSON.parse(data)
+            if typeof data == 'string' then data = JSON.parse(data)
             User.findById data.userid, (err, user) ->
               #if (err) return console.log(err);
               user.friends.push data.friendid if user
@@ -147,8 +149,7 @@ module.exports = (sockjs, connections) ->
                 updateFriends socket, data.userid
 
           when 'remove friend'
-            if typeof data == 'string'
-              data = JSON.parse(data)
+            if typeof data == 'string' then data = JSON.parse(data)
             User.findById data.userid, (err, user) ->
               #if (err) return console.log(err);
               user.friends.splice(user.friends.indexOf(data.friendid), 1) if user
@@ -159,8 +160,21 @@ module.exports = (sockjs, connections) ->
           when 'get user'
             User.findById data, (err, user) ->
               #if (err) return console.log(err);
-              user = '404' unless user?
+              unless user? then user = '404'
               emit socket, 'user', user
+
+          when 'admin:get users'
+            getUsers socket
+
+          when 'set rank'
+            if typeof data == 'string' then data = JSON.parse data
+            User.update {_id: data.user._id}, {rank: data.rank}, ->
+              getUsers socket
+
+          when 'admin:delete user'
+            User.findById(data).remove ->
+              getUsers socket
+
           when 'leave room' then leaveRoom socket, data
 
       #Disconnect
@@ -173,12 +187,13 @@ module.exports = (sockjs, connections) ->
           if connections[i].id == socket.id
             connections.splice i, 1
 
-  updateRooms = (data) ->
-    if data?
-      search = owner: data
-    else
-      search = {}
-    Room.find search, (err, found) ->
+  getUsers = (socket) ->
+    User.find {}, (err, users) ->
+      unless users? then users = '404'
+      emit socket, 'admin:users', users
+
+  updateRooms = ->
+    Room.find {}, (err, found) ->
       #if (err) return console.log(err);
       for cur of found
         id = found[cur]._id

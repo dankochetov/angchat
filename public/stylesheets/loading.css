@@ -14,6 +14,14 @@
   top: 0;
 }
 
+.sk-fading-circle.color-white .sk-circle:before {
+  background-color: white;
+}
+
+.sk-fading-circle.color-black .sk-circle:before {
+  background-color: black;
+}
+
 .sk-fading-circle .sk-circle:before {
   background-color: white;
   content: '';

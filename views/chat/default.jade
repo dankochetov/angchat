@@ -60,6 +60,7 @@ script(type='text/ng-template', id='passwordModal')
 										li.divider(role='separator' ng-if-end)
 										li: a(href='', ng-click='$root.closeTab($root.tab)', ng-if='$root.tab!=$root.rootTab') Close tab
 										li: a(href='', ng-click='template.go("/chat/myrooms", scope)') My rooms
+										li(ng-if='$root.user.rank>2'): a(href='', ng-click='template.go("/adminpanel")') Admin panel
 										li: a(href='', ng-click='logout()') Logout
 				div(ng-repeat='cur in $root.tabs')
 					span(ng-if='cur.private', ng-init='tabInit.resolve(cur)', ng-controller='privateCtrl', ng-show='cur.active')

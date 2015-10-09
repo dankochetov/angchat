@@ -228,3 +228,19 @@ li.userlist-item.dropdown-toggle {
 .modal-header h3 {
 	margin: 0 !important;
 }
+
+.rank-2, .rank-3, .rank-4 {
+	font-weight: bold;
+}
+
+.rank-2 {
+	color: green;
+}
+
+.rank-3 {
+	color: orange;
+}
+
+.rank-4 {
+	color: red;
+}

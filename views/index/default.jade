@@ -1,7 +1,8 @@
 .panel.panel-default#login(ng-controller='indexCtrl')
 	.panel-heading
 		h3.text-center Welcome!
-			include ../loading
+			span(ng-if='showLoading')
+				include ../loading
 	.panel-body
 		form
 			.container-fluid

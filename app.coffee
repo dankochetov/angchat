@@ -79,6 +79,7 @@ index = require('./routes/index')
 myrooms = require('./routes/myrooms')
 chat = require('./routes/chat')
 getuser = require('./routes/api/getuser')
+adminpanel = require('./routes/adminpanel')
 
 app = express()
 
@@ -108,9 +109,7 @@ app.use '/', index
 app.use '/chat', chat
 app.use '/myrooms', myrooms
 app.use '/', getuser
-
-app.get '/test', (req, res, next) ->
-	res.render 'test'
+app.use '/adminpanel', adminpanel
 
 # catch 404 and forward to error handler
 app.use (req, res, next) ->

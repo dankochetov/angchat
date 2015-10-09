@@ -1,0 +1,62 @@
+include ../../loading
+
+.row
+	.col-md-6.col-md-offset-3.col-sm-8.col-sm-offset-2.col-xs-10.col-xs-offset-1
+		.panel.panel-default(ng-controller='adminpanelCtrl')
+			.panel-heading
+				h3 Admin panel
+					.pull-right
+						include ../backBtn
+			.panel-body
+				h4 Rooms
+					span(ng-if='loadingRooms')
+						+loading('black')
+				div.text-center(ng-if='rooms.length==0') You haven't created any rooms yet
+				table.table.table-bordered.table-hover.table-responsive(ng-if='rooms.length>0')
+					thead
+						tr.info
+							th.col-xs-3 Name
+							th.col-xs-5 Description
+							th.col-xs-1.text-center Delete
+							th.col-xs-1.text-center Online
+					tbody
+						tr(ng-repeat='room in rooms | orderBy: name')
+							td
+								|{{room.name}}
+								| 
+								.glyphicon.glyphicon-lock(ng-if='room.protect', title='This room is protected with password')
+							td {{room.description}}
+							td.text-center
+								button.btn.btn-danger.btn-xs(ng-click='deleteRoom(room)')
+									.glyphicon.glyphicon-remove
+							td.text-center {{room.online}}
+				h4 Users
+					span(ng-if='loadingUsers')
+						+loading('black')
+				table.table.table-bordered.table-hover.table-responsive(ng-if='!loadingUsers')
+					tr.info
+						th.col-xs-4 Username
+						th.col-xs-3 Login
+						th.col-xs-1 SN
+						th.col-xs-2 Rank
+						th.col-xs-1 Delete
+					tr(ng-repeat='user in users | orderBy: "-rank"')
+						td
+							span(class='rank-{{user.rank}}') {{user.username}}
+							.you(ng-if='user._id==$root.user._id')
+						td {{user.login}}
+						td.text-center
+							img(ng-if='user.vkontakte', ng-src='/images/signin/vk.png', width=24)
+							img(ng-if='user.facebook', ng-src='/images/signin/fb.png', width=24)
+						td
+							span(ng-if='changingRank[user._id]')
+								+loading('black')
+							.dropdown
+								button.btn.btn-default.btn-sm.dropdown-toggle(type='button', data-toggle='dropdown', aria-haspopup='true', aria-expanded='false', ng-class='{"disabled": user._id==$root.user._id}')
+									|{{user.rank}} ({{ranks[user.rank-1]}}) 
+									.caret
+								ul.dropdown-menu
+									li(ng-repeat='i in [1, 2, 3, 4]', ng-if='user.rank!=i&&$root.user.rank>i')
+										a(href='', ng-click='setRank(user, i)') {{i}} ({{ranks[i-1]}})
+						td.text-center
+							button.btn.btn-danger.btn-xs(ng-click='deleteUser(user)'): .glyphicon.glyphicon-remove
