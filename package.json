@@ -34,6 +34,8 @@
     "passport-vkontakte": "*",
     "passport-local": "*",
     "serve-favicon": "~2.3.0",
-    "sockjs": "*"
+    "sockjs": "*",
+    "couchbase": "*",
+    "uuid": "*"
   }
 }
