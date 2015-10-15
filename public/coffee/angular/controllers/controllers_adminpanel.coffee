@@ -1,10 +1,19 @@
 chatio.controller 'adminpanelCtrl', ['$scope', '$rootScope', 'socket', '$timeout', '$http', 'template', ($scope, $rootScope, socket, $timeout, $http, template) ->
 
+	$scope.recordsPerPage = 5
+	$scope.usersPage = 1
+
+	if $rootScope.user.rank < 2
+		template.go '/chat'
+		template.clear
+
 	$scope.ranks = ['user', 'moderator', 'administrator', 'extra']
 	$scope.changingRank = {}
+	$scope.statsPeriod = 'today'
 
 	$http.get('/getuser').then (response) ->
 		if response.data == '401'
+			$rootScope.user = {}
 			template.go '/index'
 			template.clear
 
@@ -14,10 +23,18 @@ chatio.controller 'adminpanelCtrl', ['$scope', '$rootScope', 'socket', '$timeout
 		for listener in listeners
 			listener()
 
-	$scope.loadingRooms = $scope.loadingUsers = true
+	$scope.loadingRooms = $scope.loadingUsers = $scope.loadingStats = true
 
+	socket.emit 'admin:get stats', (new Date()).format 'isoDate'
 	socket.emit 'get rooms'
-	socket.emit 'admin:get users'
+	$scope.loadUsers = ->
+		socket.emit 'admin:get users', {recordsPerPage: $scope.recordsPerPage, page: $scope.usersPage}
+	$scope.loadUsers()
+
+	listeners.push socket.on 'admin:stats', (stats) ->
+		$timeout ->
+			$scope.stats = stats
+			$scope.loadingStats = false
 
 	listeners.push socket.on 'rooms', (rooms) ->
 		$timeout ->

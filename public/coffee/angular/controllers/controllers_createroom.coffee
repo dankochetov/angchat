@@ -1,5 +1,10 @@
 chatio.controller 'createroomCtrl', ['$scope', '$http', '$location', 'template', 'autoLogout', 'tabs', ($scope, $http, $location, template, autoLogout, tabs) ->
 
+  $http.get('/getuser').then (response) ->
+    if response.data == '401'
+      template.go '/index'
+      template.clear()
+
   $scope.submit = ->
     $scope.showLoading = true
     $http.post('/chat/createroom', $scope.formData).then (response) ->

@@ -1,12 +1,14 @@
 require('coffee-script')
 
-express = require('express')
-mongo = require('mongodb')
-mongoose = require('mongoose')
+express = require 'express'
+mongo = require 'mongodb'
+mongoose = require 'mongoose'
 router = express.Router()
-bcrypt = require('bcrypt-nodejs')
-passport = require('passport')
-User = require('../models/user')
+bcrypt = require 'bcrypt-nodejs'
+passport = require 'passport'
+User = require '../models/user'
+Stats = require '../models/stats'
+dateFormat = require '../public/coffee/date.format'
 
 router.get '/', (req, res, next) ->
   if req.isAuthenticated()
@@ -21,12 +23,15 @@ router.get '/signin', (req, res, next) -> res.render 'index/signin'
 router.get '/signin/fb', passport.authenticate 'facebook'
 router.get '/signin/fb/cb', passport.authenticate('facebook', failureRedirect: '/'), (req, res, next) ->
   require('../sockets')(req.app.locals.sockjs, req.app.locals.connections).autoLogin()
+  Stats.inc ['users', 'signedIn']
   res.redirect '/'
 
 router.get '/signin/vk', passport.authenticate 'vkontakte'
 router.get '/signin/vk/cb', passport.authenticate('vkontakte', failureRedirect: '/'), (req, res, next) ->
-  require('../sockets')(req.app.locals.sockjs, req.app.locals.connections).autoLogin()
-  res.redirect '/'
+    Stats.inc ['users', 'signedIn']
+    require('../sockets')(req.app.locals.sockjs, req.app.locals.connections).autoLogin()
+    res.redirect '/'
+
 
 router.post '/signin', (req, res, next) ->
   req.checkBody('login', 'Login field is empty!').notEmpty()
@@ -40,6 +45,7 @@ router.post '/signin', (req, res, next) ->
     req.logIn user, (err) ->
       if err then return next(err)
       require('../sockets')(req.app.locals.sockjs, req.app.locals.connections).autoLogin()
+      Stats.inc ['users', 'signedIn']
       res.end 'success'
 
   ) req, res, next
@@ -80,6 +86,7 @@ router.post '/signup', (req, res, next) ->
           if err
             return next(err)
           require('../sockets')(req.app.locals.sockjs, req.app.locals.connections).autoLogin()
+          Stats.inc ['users', 'signedUp']
           res.end 'success'
 
 router.get '/logout', (req, res, next) ->

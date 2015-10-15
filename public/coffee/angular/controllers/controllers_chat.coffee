@@ -48,19 +48,21 @@ chatio.controller 'chatCtrl', ['$scope', '$rootScope', '$route', '$routeParams',
   $rootScope.popups = popup.list
   notifySound = ngAudio.load('../sounds/notify.mp3')
   listeners.push socket.on 'listener event', (data) ->
-    if data.to != $rootScope.user._id or $rootScope.tab.id == data.from then return
-    $scope.openTab data.from,
-      private: true
-      open: false
-      unread: true
-    popup.add data
-    notifySound.play()
+    if data.to != $rootScope.user._id then return
+    if $rootScope.tab.id != data.from
+      $scope.openTab data.from,
+        private: true
+        open: false
+        unread: true
+    unless $rootScope.active
+      popup.add data
+      notifySound.play()
 
   $scope.logout = ->
     $http.get '/logout'
 
   $scope.openTab = (id, params = {}) ->
-    if !params.open? then params.open = true
+    unless params.open? then params.open = true
     createNew = true
     for cur of $rootScope.tabs
       if $rootScope.tabs[cur].id == id

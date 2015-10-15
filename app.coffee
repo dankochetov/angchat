@@ -18,8 +18,6 @@ mongoose.connect 'mongodb://kochetov_dd:ms17081981ntv@ds035633.mongolab.com:3563
 #mongoose.connect('mongodb://127.0.0.1/chatio');
 
 User = require('./models/user')
-Message = require('./models/message')
-Room = require('./models/room')
 
 passport.serializeUser (user, done) ->
 	done null, user.id

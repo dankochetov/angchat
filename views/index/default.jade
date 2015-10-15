@@ -1,8 +1,10 @@
+include ../loading
+
 .panel.panel-default#login(ng-controller='indexCtrl')
 	.panel-heading
 		h3.text-center Welcome!
 			span(ng-if='showLoading')
-				include ../loading
+				+loading('white')
 	.panel-body
 		form
 			.container-fluid

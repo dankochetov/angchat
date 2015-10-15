@@ -1,6 +1,11 @@
-User = require('./models/user')
-Message = require('./models/message')
-Room = require('./models/room')
+User = require './models/user'
+uuid = require 'uuid'
+couchbase = require 'couchbase'
+Message = (new couchbase.Cluster('couchbase://127.0.0.1')).openBucket 'messages'
+N1QL = require('couchbase').N1qlQuery
+Room = require './models/room'
+Stats = require './models/stats'
+dateFormat = require './public/coffee/date.format'
 
 module.exports = (sockjs, connections) ->
 
@@ -83,6 +88,7 @@ module.exports = (sockjs, connections) ->
           #Send message
           when 'send message'
             if typeof data == 'string' then data = JSON.parse data
+            Stats.inc ['messages', 'public']
             msg = 
               text: data.msg
               room: data.roomid
@@ -93,8 +99,8 @@ module.exports = (sockjs, connections) ->
               emitRoom 'listeners', 'new message', msg
 
           when 'send private message'
-            if typeof data == 'string'
-              data = JSON.parse(data)
+            if typeof data == 'string' then data = JSON.parse(data)
+            Stats.inc ['messages', 'private']
             msg = 
               text: data.msg
               private: true
@@ -123,17 +129,19 @@ module.exports = (sockjs, connections) ->
 
           when 'delete room'
             if typeof data == 'string' then data = JSON.parse(data)
+            Stats.inc ['rooms', 'deleted']
             Room.findById(data.roomid).remove (err) ->
               #if (err) console.log(err);
               updateRooms()
-            Message.find(room: data.roomid).remove (err) ->
+              Message.query N1QL.fromString 'delete from messages where room = "' + data.roomid + '"'
               #if (err) console.log(err);
 
           when 'admin:delete room'
+            Stats.inc ['rooms', 'deleted']
             Room.findById(data).remove ->
               broadcast 'kick', data
               updateRooms()
-              Message.find(room: data).remove()
+              Message.query N1QL.fromString 'delete from messages where room = "' + data + '"'
 
           when 'comment' then console.log data
 
@@ -164,18 +172,54 @@ module.exports = (sockjs, connections) ->
               emit socket, 'user', user
 
           when 'admin:get users'
-            getUsers socket
+            if typeof data == 'string' then data = JSON.parse(data)
+            getUsers socket, data
 
           when 'set rank'
             if typeof data == 'string' then data = JSON.parse data
             User.update {_id: data.user._id}, {rank: data.rank}, ->
-              getUsers socket
+              getUsers()
 
           when 'admin:delete user'
+            if typeof data == 'string' then data = JSON.parse(data)
             User.findById(data).remove ->
               getUsers socket
 
           when 'leave room' then leaveRoom socket, data
+
+          when 'admin:get stats'
+            Stats.model.findOrCreate {date: data}, (err, today, created) ->
+              Stats.model.aggregate [
+                {$group:
+                  _id: 0
+                  roomsCreated:
+                    $sum: '$rooms.created'
+                  roomsDeleted:
+                    $sum: '$rooms.deleted'
+                  messagesPublic:
+                    $sum: '$messages.public'
+                  messagesPrivate:
+                    $sum: '$messages.private'
+                  usersSignedUp:
+                    $sum: '$users.signedUp'
+                  usersSignedIn:
+                    $sum: '$users.signedIn'
+                },
+                {
+                  $project:
+                    _id: 0
+                    rooms:
+                      created: '$roomsCreated'
+                      deleted: '$roomsDeleted'
+                    messages:
+                      public: '$messagesPublic'
+                      private: '$messagesPrivate'
+                    users:
+                      signedUp: '$usersSignedUp'
+                      signedIn: '$usersSignedIn'
+                }
+              ], (err, all) ->
+                emit socket, 'admin:stats', {today: today, all: all[0]}
 
       #Disconnect
       socket.on 'close', ->
@@ -187,10 +231,13 @@ module.exports = (sockjs, connections) ->
           if connections[i].id == socket.id
             connections.splice i, 1
 
-  getUsers = (socket) ->
+  getUsers = (socket, data = {}) ->
     User.find {}, (err, users) ->
       unless users? then users = '404'
-      emit socket, 'admin:users', users
+      unless socket?
+        broadcast 'admin:users', users
+      else
+        emit socket, 'admin:users', users
 
   updateRooms = ->
     Room.find {}, (err, found) ->
@@ -262,11 +309,27 @@ module.exports = (sockjs, connections) ->
         data: messages
 
   getHistory = (roomid, callback) ->
+    Message.query N1QL.fromString('select * from messages where room = "' + roomid + '" order by time'),
+    (err, messages) ->
+      if messages?
+        for message of messages
+          messages[message] = messages[message].messages
+        callback messages
+    
+    ###
     Message.find { room: roomid }, null, { sort: 'time' }, (err, messages) ->
       #if (err) return console.log(err);   
         callback messages if messages?
+    ###
 
   getPrivateHistory = (id1, id2, callback) ->
+    Message.query N1QL.fromString('select * from messages where (`from` = "' + id1 + '" and `to` = "' + id2 + '") or (`from` = "' + id2 + '" and `to` = "' + id1 + '") order by time'), (err, messages) ->
+      if messages?
+        for message of messages
+          messages[message] = messages[message].messages
+        callback messages
+
+    ###
     Message.find(private: true).sort('time').and($or: [
       { $and: [
         { from: id1 }
@@ -278,11 +341,10 @@ module.exports = (sockjs, connections) ->
       } ] }
     ]).exec (err, messages) ->
       callback messages if messages?
+    ###
 
   addMessage = (msg, callback) ->
-    message = new Message(msg)
-    message.save (err) ->
-      #if (err) return console.log(err);
+    Message.insert uuid.v4(), msg, (err, res) ->
       callback()
 
   clearHistory = (roomid, userid, callback) ->
@@ -294,8 +356,7 @@ module.exports = (sockjs, connections) ->
         if room and room.users[user._id]
           rank = Math.max(rank, room.users[user._id])
         return console.log(user.username + ' tried to clear history but had no permission') if rank < 3
-        Message.remove { room: roomid }, (err) ->
-          #if (err) return console.log(err);
+        Message.query N1QL.fromString('delete from messages where room = "' + roomid + '"'), (err, res) ->
           console.log 'history cleared'
           callback()
 

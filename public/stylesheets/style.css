@@ -244,3 +244,12 @@ li.userlist-item.dropdown-toggle {
 .rank-4 {
 	color: red;
 }
+
+.space-right {
+	margin-right: 3px;
+}
+
+.pagination {
+	margin-top: 0;
+	margin-bottom: 0;
+}

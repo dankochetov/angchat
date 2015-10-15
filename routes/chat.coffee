@@ -1,10 +1,11 @@
-require('coffee-script')
+require 'coffee-script'
 
-express = require('express')
+express = require 'express'
 router = express.Router()
 
-User = require('../models/user')
-Room = require('../models/room')
+User = require '../models/user'
+Room = require '../models/room'
+Stats = require '../models/stats'
 
 router.get '/', (req, res, next) ->
   res.render 'chat/default'
@@ -37,7 +38,7 @@ router.post '/createroom', (req, res, next) ->
     if err then return next(err)
     if room then return res.end(JSON.stringify(
         status: 'error'
-        errors: [ { msg: 'Room with this name already exists!' } ]))
+        errors: [{msg: 'Room with this name already exists!'}]))
     else
       room = new Room(
         name: name
@@ -49,8 +50,9 @@ router.post '/createroom', (req, res, next) ->
       room.save (err) ->
         if err then return next(err)
         sockets.updateRooms()
-        Room.findOne { name: name }, (err, room) ->
+        Room.findOne {name: name}, (err, room) ->
           if err then next err
+          Stats.inc ['rooms', 'created']
           res.end JSON.stringify(
             status: 'success'
             id: room._id)

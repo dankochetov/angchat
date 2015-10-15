@@ -4,14 +4,48 @@ include ../../loading
 	.col-md-6.col-md-offset-3.col-sm-8.col-sm-offset-2.col-xs-10.col-xs-offset-1
 		.panel.panel-default(ng-controller='adminpanelCtrl')
 			.panel-heading
-				h3 Admin panel
+				h2 Admin panel
 					.pull-right
 						include ../backBtn
 			.panel-body
-				h4 Rooms
+				h3 Stats 
+					span(ng-if='loadingStats')
+						+loading('black')
+					.btn-group(ng-show='!loadingStats')
+						label.btn.btn-default(ng-model='statsPeriod', btn-radio='"today"') Today
+						label.btn.btn-default(ng-model='statsPeriod', btn-radio='"all"') All time
+				.row
+					.col-xs-6
+						table.table.table-bordered.table-hover(ng-if='!loadingStats')
+							tr.info
+								th(colspan=2) Messages written
+							tr
+								td.col-xs-10 Public
+								td {{stats[statsPeriod].messages.public}}
+							tr
+								td Private
+								td {{stats[statsPeriod].messages.private}}
+							tr.info
+								th(colspan=2) Rooms
+							tr
+								td Created
+								td {{stats[statsPeriod].rooms.created}}
+							tr
+								td Deleted
+								td {{stats[statsPeriod].rooms.deleted}}
+							tr.info
+								th(colspan=2) Users
+							tr
+								td Signed up
+								td {{stats[statsPeriod].users.signedUp}}
+							tr
+								td Signed in
+								td {{stats[statsPeriod].users.signedIn}}
+				br
+				h3 Rooms
 					span(ng-if='loadingRooms')
 						+loading('black')
-				div.text-center(ng-if='rooms.length==0') You haven't created any rooms yet
+				div.text-center(ng-if='rooms.length==0') No rooms created
 				table.table.table-bordered.table-hover.table-responsive(ng-if='rooms.length>0')
 					thead
 						tr.info
@@ -27,36 +61,51 @@ include ../../loading
 								.glyphicon.glyphicon-lock(ng-if='room.protect', title='This room is protected with password')
 							td {{room.description}}
 							td.text-center
-								button.btn.btn-danger.btn-xs(ng-click='deleteRoom(room)')
+								button.btn.btn-danger.btn-xs(ng-click='deleteRoom(room)', ng-disabled='$root.user.rank<3')
 									.glyphicon.glyphicon-remove
 							td.text-center {{room.online}}
-				h4 Users
-					span(ng-if='loadingUsers')
-						+loading('black')
+				br
+				h3
+					.row
+						.col-xs-6 Users
+							span(ng-if='loadingUsers')
+								+loading('black')
+						.col-xs-6
+							.input-group.pull-right#search(ng-if='!loadingUsers')
+								.input-group-addon
+									.glyphicon.glyphicon-search
+								input.filter.form-control(type='text', ng-model='$parent.filterUsers')
+				mixin usersPagination
+					pagination.pagination-sm(next-text='›', previous-text="‹", ng-model='usersPage', ng-change='loadUsers()' total-items='(users | filter: filterUsers).length', items-per-page='recordsPerPage', ng-show='!loadingUsers')
+				center
+					+usersPagination
 				table.table.table-bordered.table-hover.table-responsive(ng-if='!loadingUsers')
 					tr.info
 						th.col-xs-4 Username
-						th.col-xs-3 Login
-						th.col-xs-1 SN
+						th.col-xs-4 Login
 						th.col-xs-2 Rank
 						th.col-xs-1 Delete
-					tr(ng-repeat='user in users | orderBy: "-rank"')
+					tr(ng-repeat='user in users | orderBy: ["-rank", "username", "login"] | filter: filterUsers | limitTo: recordsPerPage*usersPage' ng-if='$index>=recordsPerPage*(usersPage-1)')
 						td
 							span(class='rank-{{user.rank}}') {{user.username}}
 							.you(ng-if='user._id==$root.user._id')
-						td {{user.login}}
-						td.text-center
-							img(ng-if='user.vkontakte', ng-src='/images/signin/vk.png', width=24)
-							img(ng-if='user.facebook', ng-src='/images/signin/fb.png', width=24)
+						td
+							table: tr
+								td
+									img.space-right(ng-if='user.vkontakte', ng-src='/images/signin/vk.png', width=18)
+									img.space-right(ng-if='user.facebook', ng-src='/images/signin/fb.png', width=18)
+								td {{user.login}}
 						td
 							span(ng-if='changingRank[user._id]')
 								+loading('black')
 							.dropdown
-								button.btn.btn-default.btn-sm.dropdown-toggle(type='button', data-toggle='dropdown', aria-haspopup='true', aria-expanded='false', ng-class='{"disabled": user._id==$root.user._id||$root.user.rank<=user.rank}')
+								button.btn.btn-default.btn-sm.dropdown-toggle(type='button', data-toggle='dropdown', aria-haspopup='true', aria-expanded='false', ng-disabled='user._id==$root.user._id||$root.user.rank<=2||$root.user.rank<=user.rank')
 									|{{user.rank}} ({{ranks[user.rank-1]}}) 
 									.caret
 								ul.dropdown-menu
 									li(ng-repeat='i in [1, 2, 3, 4]', ng-if='user.rank!=i&&$root.user.rank>i')
 										a(href='', ng-click='setRank(user, i)') {{i}} ({{ranks[i-1]}})
 						td.text-center
-							button.btn.btn-danger.btn-xs(ng-click='deleteUser(user)'): .glyphicon.glyphicon-remove
+							button.btn.btn-danger.btn-xs(ng-click='deleteUser(user)', ng-disabled='user._id==$root.user._id||$root.user.rank<=3'): .glyphicon.glyphicon-remove
+				center
+					+usersPagination
