@@ -10,7 +10,7 @@ chatio = angular.module 'chatio', [
 ]
 
 chatio.directive 'actionOnFinish', ->
-	(scope) -> scope.$emit 'rendering finished' if scope.$last
+	(scope) -> if scope.$last then scope.$emit 'rendering finished'
 
 chatio.config ['$locationProvider', ($locationProvider) ->
 	$locationProvider.html5Mode

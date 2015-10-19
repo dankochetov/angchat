@@ -63,10 +63,10 @@ script(type='text/ng-template', id='passwordModal')
 										li(ng-if='$root.user.rank>1'): a(href='', ng-click='template.go("/adminpanel")') Admin panel
 										li: a(href='', ng-click='logout()') Logout
 				div(ng-repeat='cur in $root.tabs')
-					span(ng-if='cur.private', ng-init='tabInit.resolve(cur)', ng-controller='privateCtrl', ng-show='cur.active')
-						div(ng-include='cur.url')
-					span(ng-if='!cur.private', ng-init='tabInit.resolve(cur)', ng-controller='roomCtrl', ng-show='cur.active')
-						div(ng-include='cur.url')
+					span(ng-if='cur.private', ng-controller='privateCtrl', ng-show='cur.active')
+						div(ng-include='cur.url', ng-init='tab1=cur;tabInit.resolve(cur)')
+					span(ng-if='!cur.private', ng-controller='roomCtrl', ng-show='cur.active')
+						div(ng-include='cur.url', ng-init='tab1=cur;tabInit.resolve(cur)')
 				div(ng-include='$root.rootTab.url', ng-controller='roomsCtrl', ng-show='$root.rootTab.active')
 		.col-xs-3(ng-if='$root.tab!=$root.rootTab && !$root.tab.private')
 			.panel.panel-default#userWrapper

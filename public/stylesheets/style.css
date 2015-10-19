@@ -10,7 +10,7 @@ body {
 	word-wrap: break-word;
 }
 
-#chatWindow {
+.chatWindow {
 	min-height: 300px;
 	height: 450px !important;
 	overflow-y: auto;
@@ -19,10 +19,10 @@ body {
 	height: 100%;
 }
 
-#chatWrapper .panel-body {
+.chatWrapper .panel-body {
 }
 
-#chatWindow p {
+.chatWindow p {
 	margin: 0 5px;
 }
 
@@ -252,4 +252,21 @@ li.userlist-item.dropdown-toggle {
 .pagination {
 	margin-top: 0;
 	margin-bottom: 0;
+}
+
+#loadMoreBtn {
+	display: block;
+	cursor: pointer;
+	height: 30px;
+	background-color: #ddf;
+	margin-top: 0;
+}
+
+#loadMoreBtn:hover {
+	background-color: #ccf;
+}
+
+#messageForm {
+	margin-left: 15px;
+	margin-right: 15px;
 }

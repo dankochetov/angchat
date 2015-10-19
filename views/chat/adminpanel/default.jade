@@ -59,7 +59,9 @@ include ../../loading
 								|{{room.name}}
 								| 
 								.glyphicon.glyphicon-lock(ng-if='room.protect', title='This room is protected with password')
-							td {{room.description}}
+							td
+								span(ng-if='room.description!=""') {{room.description}}
+								span(ng-if='room.description==""'): i No description
 							td.text-center
 								button.btn.btn-danger.btn-xs(ng-click='deleteRoom(room)', ng-disabled='$root.user.rank<3')
 									.glyphicon.glyphicon-remove

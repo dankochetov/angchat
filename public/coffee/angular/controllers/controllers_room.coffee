@@ -1,64 +1,101 @@
 chatio.controller 'roomCtrl', ['$scope', '$rootScope', '$http', '$timeout', '$location', '$routeParams', '$q', '$modal', 'socket', 'tabs', ($scope, $rootScope, $http, $timeout, $location, $routeParams, $q, $modal, socket, tabs) ->
 
-  listeners = []
+  $scope.listeners = []
+  $scope.totalMessages = 0
+  $scope.chatWindow = {}
   $scope.$on '$destroy', (event, data) ->
-    for listener in listeners
+    for listener in $scope.listeners
       listener()
-
   $scope.tabInit = $q.defer()
-  $scope.usernames = []
+  $scope.chatWindowInit = $q.defer()
+  $scope.tabShowInit = $q.defer()
   $scope.messages = []
   user = $scope.user = $rootScope.user
+  
+
+  $scope.tabActiveInit = (tab) ->
+    tab.tabActiveInit.promise.then ->
+      $timeout ->
+        $scope.chatWindowJQuery = angular.element(".chatWindow-#{tab.id}")
+        $scope.tabShowInit.resolve()
+        $scope.chatWindow = $scope.chatWindowJQuery[0]
+        $scope.scrollGlue = true
+      $timeout (-> $scope.scrollGlue = false ), 100
+
+  $scope.tabShowInit.promise.then ->
+    $scope.chatWindowJQuery.bind 'scroll', ->
+      if $scope.chatWindow.scrollTop is 0 and $scope.messages.length isnt $scope.totalMessages
+        $timeout -> $scope.loadHistory(false)
+
   $scope.tabInit.promise.then (tab) ->
     tab.tabInit.promise.then (tab) ->
-      init = (room) ->
 
+      init = (room) ->
         showPasswordModal = (callback) ->
-          return callback() if !room.protect
+          if !room.protect then return callback()
           passwordModal = $modal.open
             size: 'sm'
             templateUrl: 'passwordModal'
             controller: 'modalCtrl'
             backdrop: 'static'
-            resolve: room: ->
-              room
+            resolve: room: -> room
 
           passwordModal.result.then ((password) ->
-            if password != room.password
+            if password isnt room.password
               showPasswordModal callback
             else 
-              callback() if callback
+              if callback then callback()
           ), ->
             $rootScope.closeTab tab
-   
-        room = JSON.parse(room) if typeof room == 'string'
+
+        if typeof room is 'string' then room = JSON.parse(room)
         showPasswordModal ->
           socket.emit 'new user',
             user: $scope.user
             room: room
           $rootScope.title = ' - ' + room.name
-          user.rank = $rootScope.user.rank = Math.max(user.rank, if room.users[user._id] then room.users[user._id] else 0)
+          user.rank = $rootScope.user.rank = Math.max user.rank, if room.users[user._id]? then room.users[user._id] else 0
           tab.unread = 0
-          socket.emit 'get history', room._id
-          listeners.push socket.on 'history', (data) ->
-            return if data.id != tab.id
-            $scope.messages = data.data
-            $scope.scrollGlue = true
+
+          $scope.listeners.push socket.on 'history', (data) ->
+            if data.id isnt tab.id then return
+
+            $scope.tabActiveInit? tab
+            delete $scope.tabActiveInit
+
+            $scope.totalMessages = data.data.count
+            pos = $scope.chatWindow.scrollHeight - $scope.chatWindow.scrollTop
+            for id of data.data.messages
+              data.data.messages[id].id = (Math.random() * Math.random()).toString()
+            $timeout ->
+              $scope.loadingHistory = false
+              $scope.messages = data.data.messages.concat $scope.messages
+            $timeout -> $scope.chatWindow.scrollTop = $scope.chatWindow.scrollHeight - pos
+            $timeout (-> $scope.scrollGlue = false ), 100
+
+          $scope.loadHistory = (scroll = true) ->
+            $timeout ->
+              $scope.scrollGlue = scroll
+              $scope.loadingHistory = true
+            socket.emit 'get history',
+              roomid: room._id
+              skip: $scope.messages.length
+          $scope.loadHistory()
+
+          $scope.listeners.push socket.on 'new message', (data) ->
+            if data.room isnt tab.id then return
+            ++$scope.totalMessages
+            tabs.addUnread(tab.id) if tab.id != $rootScope.tab.id
+            $timeout -> $scope.scrollGlue = true
+            $timeout -> $scope.messages.push data
             $timeout (-> $scope.scrollGlue = false), 100
 
-          listeners.push socket.on 'new message', (data) ->
-            return if data.room != tab.id
-            tabs.addUnread(tab.id) if tab.id != $rootScope.tab.id
-            $scope.messages.push data
-            $scope.scrollGlue = true
-            $timeout (->$scope.scrollGlue = false), 100
-
         $scope.$on 'clear history', (event, id) ->
-          $scope.messages = [] if id == room._id
+          if id is room._id then $scope.messages = []
 
       socket.emit 'get room', tab.id
       close = socket.on 'room', (room) ->
-        return if room._id != tab.id
+        if room._id isnt tab.id then return
         init room
         close()
 

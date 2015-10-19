@@ -17,12 +17,13 @@ chatio.factory 'tabs', ['$rootScope', '$timeout', '$localStorage', '$q', ($rootS
             if params.force then $rootScope.tabs[num].active = false
             if $rootScope.tabs[num].id == id
               tab.tabInit.resolve tab
+              tab.tabActiveInit?.resolve()
               $rootScope.title = ' - ' + $rootScope.tabs[num].title
               $rootScope.tabs[num].active = true
               $rootScope.tab = $rootScope.tabs[num]
               $rootScope.tab.unread = 0
               if !params.force then break
-        callback() if callback
+        callback?()
         flush()
 
   $rootScope.tab = {}
@@ -38,38 +39,41 @@ chatio.factory 'tabs', ['$rootScope', '$timeout', '$localStorage', '$q', ($rootS
       $rootScope.tabs = $rootScope.$storage.tabs
       for tab in $rootScope.tabs
         tab.tabInit = $q.defer()
+        tab.tabActiveInit = $q.defer()
         if !tab.protect then tab.tabInit.resolve tab
       $rootScope.rootTab = $rootScope.$storage.rootTab or $rootScope.rootTab
       $rootScope.tab = $rootScope.$storage.tab or $rootScope.rootTab
       tabsInit.resolve()
-      if callback then callback()
+      active $rootScope.tab.id
+      callback?()
 
     open: (data, callback) ->
       for tab in $rootScope.tabs
         if tab.id == data.id then return
       $timeout ->
         data.tabInit = $q.defer()
+        data.tabActiveInit = $q.defer()
         $rootScope.tabs.push data
         if data.active then active data.id, callback, force: true
 
     close: (id, callback) ->
       tabsInit.promise.then ->
         for num of $rootScope.tabs
-          if $rootScope.tabs[num].id == id
+          if $rootScope.tabs[num].id is id
             res = num
             $timeout ->
               $rootScope.tabs.splice res, 1
               flush()
-              if callback then callback(res)
+              callback? res
 
     active: active
     addUnread: (id, callback) ->
       tabsInit.promise.then ->
         for i of $rootScope.tabs
-          if $rootScope.tabs[i].id == id
+          if $rootScope.tabs[i].id is id
             $timeout ->
               ++$rootScope.tabs[i].unread
-              callback() if callback
+              callback?()
             break
 
     count: -> $rootScope.tabs.length

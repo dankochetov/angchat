@@ -1,7 +1,7 @@
 User = require './models/user'
 uuid = require 'uuid'
 couchbase = require 'couchbase'
-Message = (new couchbase.Cluster('couchbase://127.0.0.1')).openBucket 'messages'
+Message = (new couchbase.Cluster('couchbase://81.181.8.153')).openBucket 'test1', 'kochetov'
 N1QL = require('couchbase').N1qlQuery
 Room = require './models/room'
 Stats = require './models/stats'
@@ -72,14 +72,15 @@ module.exports = (sockjs, connections) ->
 
           #Returns messages list
           when 'get history'
+            if typeof data == 'string' then data = JSON.parse data
             getHistory data, (messages) ->
               emit socket, 'history',
-                id: data
+                id: data.roomid
                 data: messages
 
           when 'get private history'
             if typeof data == 'string' then data = JSON.parse data
-            getPrivateHistory data.id1, data.id2, (messages) ->
+            getPrivateHistory data.id1, data.id2, data.skip, (messages) ->
               emit socket, 'private history',
                 from: data.id1
                 to: data.id2
@@ -133,7 +134,7 @@ module.exports = (sockjs, connections) ->
             Room.findById(data.roomid).remove (err) ->
               #if (err) console.log(err);
               updateRooms()
-              Message.query N1QL.fromString 'delete from messages where room = "' + data.roomid + '"'
+              Message.query N1QL.fromString 'delete from `test1` where room = "' + data.roomid + '"'
               #if (err) console.log(err);
 
           when 'admin:delete room'
@@ -141,7 +142,7 @@ module.exports = (sockjs, connections) ->
             Room.findById(data).remove ->
               broadcast 'kick', data
               updateRooms()
-              Message.query N1QL.fromString 'delete from messages where room = "' + data + '"'
+              Message.query N1QL.fromString 'delete from `test1` where room = "' + data + '"'
 
           when 'comment' then console.log data
 
@@ -283,11 +284,11 @@ module.exports = (sockjs, connections) ->
       leaveRoom socket, cur
       Room.findById cur, (err, room) ->
         #if (err) return console.log(err);
-        if room then console.log('User "' + users[socket.id].user.username + '" disconnected from the room "' + room.name + '".') 
+        if room then console.log "User '#{users[socket.id].user.username}' disconnected from the room '#{room.name}'."
         else
           User.findById cur, (err, user) ->
             #if (err) return console.log(err);
-            if user then console.log('User "' + users[socket.id].user.username + '" disconnected from the private chat with "' + user.username + '".') 
+            if user then console.log "User '#{users[socket.id].user.username}' disconnected from the private chat with '#{user.username}'."
       ++i
 
   updateUsers = (roomid) ->
@@ -299,7 +300,7 @@ module.exports = (sockjs, connections) ->
         if res[id]._id == users[rooms[roomid][cur]].user._id
           f = false
           break
-      res.push users[rooms[roomid][cur]].user if f
+      if f then res.push users[rooms[roomid][cur]].user
     emitRoom roomid, 'users', res
 
   updateHistory = (roomid) ->
@@ -308,40 +309,31 @@ module.exports = (sockjs, connections) ->
         id: roomid
         data: messages
 
-  getHistory = (roomid, callback) ->
-    Message.query N1QL.fromString('select * from messages where room = "' + roomid + '" order by time'),
-    (err, messages) ->
-      if messages?
-        for message of messages
-          messages[message] = messages[message].messages
-        callback messages
-    
-    ###
-    Message.find { room: roomid }, null, { sort: 'time' }, (err, messages) ->
-      #if (err) return console.log(err);   
-        callback messages if messages?
-    ###
+  getHistory = (data, callback) ->
+    data.skip ?= 0
+    condition = "`room` = '#{data.roomid}'"
+    query = "select * from `test1` where #{condition} order by `time` desc limit 50 offset #{data.skip}"
+    Message.query N1QL.fromString(query), (err, messages) ->
+      Message.query N1QL.fromString("select count(*) as `count` from `test1` where #{condition}"),
+      (err, count) ->
+        if err then console.log err
+        if not messages? then return
+        for id, message of messages
+          messages[id] = message.test1
+        callback {messages: messages.reverse(), count: count[0].count}
 
-  getPrivateHistory = (id1, id2, callback) ->
-    Message.query N1QL.fromString('select * from messages where (`from` = "' + id1 + '" and `to` = "' + id2 + '") or (`from` = "' + id2 + '" and `to` = "' + id1 + '") order by time'), (err, messages) ->
-      if messages?
-        for message of messages
-          messages[message] = messages[message].messages
-        callback messages
-
-    ###
-    Message.find(private: true).sort('time').and($or: [
-      { $and: [
-        { from: id1 }
-        { to: id2 }
-      ] }
-      { $and: [ {
-        from: id2
-        to: id1
-      } ] }
-    ]).exec (err, messages) ->
-      callback messages if messages?
-    ###
+  getPrivateHistory = (id1, id2, skip = 0, callback) ->
+    condition = "(`from` = '#{id1}' and `to` = '#{id2}') or (`from` = '#{id2}' and `to` = '#{id1}')"
+    query = "select * from `test1` where #{condition} order by `time` desc limit 50 offset #{skip}"
+    Message.query N1QL.fromString(query), (err, messages) ->
+      if err then console.log err
+      Message.query N1QL.fromString("select count(*) as `count` from `test1` where #{condition}"),
+      (err, count) ->
+        if err then console.log err
+        if not messages? then return
+        for id, message of messages
+          messages[id] = message.test1
+        callback {messages: messages.reverse(), count: count[0].count}
 
   addMessage = (msg, callback) ->
     Message.insert uuid.v4(), msg, (err, res) ->
@@ -354,9 +346,9 @@ module.exports = (sockjs, connections) ->
       Room.findById roomid, (err, room) ->
         #if (err) return console.log(err);
         if room and room.users[user._id]
-          rank = Math.max(rank, room.users[user._id])
-        return console.log(user.username + ' tried to clear history but had no permission') if rank < 3
-        Message.query N1QL.fromString('delete from messages where room = "' + roomid + '"'), (err, res) ->
+          rank = Math.max rank, room.users[user._id]
+        if rank < 3 then return console.log "#{user.username} tried to clear history but had no permission"
+        Message.query N1QL.fromString("delete from `test1` where room = '#{roomid}'"), (err, res) ->
           console.log 'history cleared'
           callback()
 
@@ -366,7 +358,7 @@ module.exports = (sockjs, connections) ->
       if user
         User.find { _id: $in: user.friends }, (err, friends) ->
           #if (err) return console.log(err);
-            emit socket, 'friends', friends if friends?
+            if friends? then emit socket, 'friends', friends
 
   {
     init: init

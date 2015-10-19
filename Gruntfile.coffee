@@ -32,6 +32,11 @@ module.exports = (grunt) ->
 				dest: 'public/javascripts/all.js'
 				options:
 					bare: true
+			full:
+				src: ['public/javascripts/source/*.js', 'public/javascripts/compiled/*.js']
+				dest: 'public/javascripts/all.js'
+				options:
+					bare: true
 
 		clean: ['public/javascripts/compiled']
 
@@ -41,3 +46,5 @@ module.exports = (grunt) ->
 	grunt.loadNpmTasks 'grunt-contrib-concat'
 	grunt.loadNpmTasks 'grunt-contrib-cssmin'
 	grunt.registerTask 'default', ['cssmin', 'coffee', 'uglify', 'concat', 'clean']
+	grunt.registerTask 'js', ['coffee', 'concat:full', 'clean']
+	grunt.registerTask 'css', 'cssmin'

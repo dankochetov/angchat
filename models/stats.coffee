@@ -27,8 +27,10 @@ Stats = module.exports.model = mongoose.model 'statistics', StatsSchema
 
 module.exports.inc = (field, callback = ->) ->
   Stats.findOne {date: dateFormat(new Date(), 'isoDate')}, (err, stats) ->
+    if err then console.log err
     if !stats then stats = new Stats({date: dateFormat(new Date(), 'isoDate')})
     ++stats[field[0]][field[1]]
     stats.markModified field[0]
-    stats.save()
+    stats.save (err, stats) ->
+      if err then console.log err
     callback()
