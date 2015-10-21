@@ -34,8 +34,7 @@ module.exports = (sockjs, connections) ->
       connections.push socket
 
       socket.on 'data', (e) ->
-        e = JSON.parse(e)
-        #console.log(e);
+        e = JSON.parse e
         event = e.event
         data = e.data
 
@@ -354,11 +353,12 @@ module.exports = (sockjs, connections) ->
 
   updateFriends = (socket, userid) ->
     User.findById userid, (err, user) ->
-      #if (err) return console.log(err);
+      if err then throw err
       if user
         User.find { _id: $in: user.friends }, (err, friends) ->
-          #if (err) return console.log(err);
-            if friends? then emit socket, 'friends', friends
+          if err then throw err
+          console.log friends
+          if friends? then emit socket, 'friends', friends
 
   {
     init: init

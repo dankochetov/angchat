@@ -11,7 +11,7 @@ chatio.factory 'socket', ['$rootScope', '$q', ($rootScope, $q)->
           ready.resolve()
 
         sock.onmessage = (e)->
-          data = JSON.parse(e.data)
+          data = JSON.parse e.data
           for i of listeners
             if i is data.event
               for k of listeners[i]

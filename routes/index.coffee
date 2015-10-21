@@ -47,7 +47,6 @@ router.post '/signin', (req, res, next) ->
       require('../sockets')(req.app.locals.sockjs, req.app.locals.connections).autoLogin()
       Stats.inc ['users', 'signedIn']
       res.end 'success'
-
   ) req, res, next
 
 router.get '/signup', (req, res, next) ->
@@ -67,7 +66,6 @@ router.post '/signup', (req, res, next) ->
   req.checkBody('password', 'Passwords do not match!').equals password2
   password = bcrypt.hashSync(password)
   err = {}
-  console.log 'here'
   User.findOne { login: login }, (err, user) ->
     if err then next err
     errors = req.validationErrors()
