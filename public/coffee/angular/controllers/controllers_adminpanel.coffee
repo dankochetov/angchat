@@ -25,23 +25,23 @@ chatio.controller 'adminpanelCtrl', ['$scope', '$rootScope', 'socket', '$timeout
 
 	$scope.loadingRooms = $scope.loadingUsers = $scope.loadingStats = true
 
-	socket.emit 'admin:get stats', (new Date()).format 'isoDate'
-	socket.emit 'get rooms'
+	socket.emit '28', (new Date()).format 'isoDate'
+	socket.emit '14'
 	$scope.loadUsers = ->
-		socket.emit 'admin:get users', {recordsPerPage: $scope.recordsPerPage, page: $scope.usersPage}
+		socket.emit '24', {recordsPerPage: $scope.recordsPerPage, page: $scope.usersPage}
 	$scope.loadUsers()
 
-	listeners.push socket.on 'admin:stats', (stats) ->
+	listeners.push socket.on '29', (stats) ->
 		$timeout ->
 			$scope.stats = stats
 			$scope.loadingStats = false
 
-	listeners.push socket.on 'rooms', (rooms) ->
+	listeners.push socket.on '31', (rooms) ->
 		$timeout ->
 			$scope.rooms = rooms
 			$scope.loadingRooms = false
 
-	listeners.push socket.on 'admin:users', (users) ->
+	listeners.push socket.on '30', (users) ->
 		$timeout ->
 			$scope.changingRank = {}
 			$scope.users = users
@@ -50,15 +50,15 @@ chatio.controller 'adminpanelCtrl', ['$scope', '$rootScope', 'socket', '$timeout
 
 	$scope.deleteRoom = (room) ->
 		if confirm 'Are you sure you want to delete the ' + room.name + ' room?'
-			socket.emit 'admin:delete room', room._id
+			socket.emit '16', room._id
 
 	$scope.setRank = (user, rank) ->
 		$scope.changingRank[user._id] = true
-		socket.emit 'set rank',
+		socket.emit '25',
 			user: user
 			rank: rank
 
 	$scope.deleteUser = (user) ->
 		if confirm 'Are you sure want to delete the ' + user.username + ' user?'
-			socket.emit 'admin:delete user', user._id
+			socket.emit '26', user._id
 ]

@@ -8,9 +8,9 @@ describe 'get friends list', ->
 		socket.onopen = ->
 			socket.onmessage = (e)->
 				data = JSON.parse e.data
-				if data.event is 'friends'
+				if data.event is '33'
 					data.data.should.have.length 0
 					done()
 			socket.send JSON.stringify
-				event: 'get friends'
+				event: '19'
 				data: '562668b0e05eb8ac14fdbb05'

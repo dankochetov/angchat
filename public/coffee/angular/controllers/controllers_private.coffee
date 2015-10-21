@@ -32,12 +32,12 @@ chatio.controller 'privateCtrl', ['$scope', '$routeParams', '$timeout', '$q', '$
 
       init = (companion)->
         companion = JSON.parse(companion) if typeof companion == 'string'
-        socket.emit 'new user', JSON.stringify
+        socket.emit '0', JSON.stringify
           user: $rootScope.user
           room: companion
         $rootScope.title = ' - ' + companion.username
 
-        $scope.listeners.push socket.on 'private history', (data)->
+        $scope.listeners.push socket.on '5', (data)->
           if data.from != $rootScope.user._id or data.to != tab.id then return
 
           $scope.tabActiveInit?(tab)
@@ -57,21 +57,21 @@ chatio.controller 'privateCtrl', ['$scope', '$routeParams', '$timeout', '$q', '$
           $timeout ->
             $scope.scrollGlue = scroll
             $scope.loadingHistory = true
-          socket.emit 'get private history',
+          socket.emit '4',
             id1: $rootScope.user._id
             id2: companion._id
             skip: $scope.messages.length   
         $scope.loadHistory()
 
-        $scope.listeners.push socket.on 'new private message', (data)->
+        $scope.listeners.push socket.on '9', (data)->
           if data.to == $rootScope.user._id and data.from != tab.id or data.from == $rootScope.user._id and data.to != tab.id then return 
           ++$scope.totalMessages
           $timeout -> $scope.scrollGlue = true
           $timeout -> $scope.messages.push data
           $timeout (-> $scope.scrollGlue = false ), 100
 
-      socket.emit 'get user', tab.id
-      close = socket.on 'user', (companion)->
+      socket.emit '22', tab.id
+      close = socket.on '23', (companion)->
         if companion._id isnt tab.id then return 
         init companion
         close()

@@ -50,14 +50,14 @@ chatio.controller 'roomCtrl', ['$scope', '$rootScope', '$http', '$timeout', '$lo
 
         if typeof room is 'string' then room = JSON.parse(room)
         showPasswordModal ->
-          socket.emit 'new user',
+          socket.emit '0',
             user: $scope.user
             room: room
           $rootScope.title = ' - ' + room.name
           user.rank = $rootScope.user.rank = Math.max user.rank, if room.users[user._id]? then room.users[user._id] else 0
           tab.unread = 0
 
-          $scope.listeners.push socket.on 'history', (data) ->
+          $scope.listeners.push socket.on '3', (data) ->
             if data.id isnt tab.id then return
 
             $scope.tabActiveInit? tab
@@ -77,12 +77,12 @@ chatio.controller 'roomCtrl', ['$scope', '$rootScope', '$http', '$timeout', '$lo
             $timeout ->
               $scope.scrollGlue = scroll
               $scope.loadingHistory = true
-            socket.emit 'get history',
+            socket.emit '2',
               roomid: room._id
               skip: $scope.messages.length
           $scope.loadHistory()
 
-          $scope.listeners.push socket.on 'new message', (data) ->
+          $scope.listeners.push socket.on '7', (data) ->
             if data.room isnt tab.id then return
             ++$scope.totalMessages
             tabs.addUnread(tab.id) if tab.id != $rootScope.tab.id
@@ -93,8 +93,8 @@ chatio.controller 'roomCtrl', ['$scope', '$rootScope', '$http', '$timeout', '$lo
         $scope.$on 'clear history', (event, id) ->
           if id is room._id then $scope.messages = []
 
-      socket.emit 'get room', tab.id
-      close = socket.on 'room', (room) ->
+      socket.emit '12', tab.id
+      close = socket.on '13', (room) ->
         if room._id isnt tab.id then return
         init room
         close()

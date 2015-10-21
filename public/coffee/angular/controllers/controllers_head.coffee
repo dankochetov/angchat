@@ -16,7 +16,7 @@ chatio.controller 'headCtrl', ['$scope', '$rootScope', '$localStorage', '$http',
 		res += ' <img src="images/signin/fb.png">' if user.facebook
 		res
 
-	listeners.push socket.on 'kick', (roomid) ->
+	listeners.push socket.on '17', (roomid) ->
 		count = tabs.count()
 		tabs.close roomid, (pos) ->
 			if pos > 0

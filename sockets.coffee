@@ -1,3 +1,42 @@
+###
+new user 0
+update users 1
+get history 2
+history 3
+get private history 4
+private history 5
+send message 6
+new message 7
+send private message 8
+new private message 9
+listener event 10
+clear history 11
+get room 12
+room 13
+get rooms 14
+delete room 15
+admin:delete room 16
+kick 17
+comment 18
+get friends 19
+add friend 20
+remove friend 21
+get user 22
+user 23
+admin:get users 24
+set rank 25
+admin:delete user 26
+leave room 27
+admin:get stats 28
+admin:stats 29
+admin:users 30
+rooms 31
+users 32
+friends 33
+autoLogin 34
+autoLogout 35
+###
+
 User = require './models/user'
 uuid = require 'uuid'
 couchbase = require 'couchbase'
@@ -39,7 +78,7 @@ module.exports = (sockjs, connections) ->
         data = e.data
 
         switch event
-          when 'new user'
+          when '0'
             data = JSON.parse(data) if typeof data == 'string'
             rooms[data.room._id] = [] if !rooms[data.room._id]
             f = true
@@ -67,26 +106,26 @@ module.exports = (sockjs, connections) ->
                   if user then console.log 'User "' + data.user.username + '" joined the private chat with "' + user.username + '".' 
 
           #Update usernames list
-          when 'update users' then updateUsers data
+          when '1' then updateUsers data
 
           #Returns messages list
-          when 'get history'
+          when '2'
             if typeof data == 'string' then data = JSON.parse data
             getHistory data, (messages) ->
-              emit socket, 'history',
+              emit socket, '3',
                 id: data.roomid
                 data: messages
 
-          when 'get private history'
+          when '4'
             if typeof data == 'string' then data = JSON.parse data
             getPrivateHistory data.id1, data.id2, data.skip, (messages) ->
-              emit socket, 'private history',
+              emit socket, '5',
                 from: data.id1
                 to: data.id2
                 data: messages
 
           #Send message
-          when 'send message'
+          when '6'
             if typeof data == 'string' then data = JSON.parse data
             Stats.inc ['messages', 'public']
             msg = 
@@ -95,10 +134,10 @@ module.exports = (sockjs, connections) ->
               time: Date.now()
               username: users[socket.id].user.username
             addMessage msg, ->
-              emitRoom data.roomid, 'new message', msg
-              emitRoom 'listeners', 'new message', msg
+              emitRoom data.roomid, '7', msg
+              emitRoom 'listeners', '7', msg
 
-          when 'send private message'
+          when '8'
             if typeof data == 'string' then data = JSON.parse(data)
             Stats.inc ['messages', 'private']
             msg = 
@@ -111,23 +150,23 @@ module.exports = (sockjs, connections) ->
             addMessage msg, ->
               for i of users
                 if users[i].user._id == msg.to
-                  emit users[i].socket, 'new private message', msg
-              emit socket, 'new private message', msg
-              broadcast 'listener event', msg
+                  emit users[i].socket, '9', msg
+              emit socket, '9', msg
+              broadcast '10', msg
 
-          when 'clear history'
+          when '11'
             clearHistory data, users[socket.id].user._id, ->
               updateHistory data
 
-          when 'get room'
+          when '12'
             Room.findById data, (err, room) ->
               #if (err) return console.log(err);
               room = '404' unless room?
-              emit socket, 'room', room
+              emit socket, '13', room
 
-          when 'get rooms' then updateRooms()
+          when '14' then updateRooms()
 
-          when 'delete room'
+          when '15'
             if typeof data == 'string' then data = JSON.parse(data)
             Stats.inc ['rooms', 'deleted']
             Room.findById(data.roomid).remove (err) ->
@@ -136,18 +175,18 @@ module.exports = (sockjs, connections) ->
               Message.query N1QL.fromString 'delete from `test1` where room = "' + data.roomid + '"'
               #if (err) console.log(err);
 
-          when 'admin:delete room'
+          when '16'
             Stats.inc ['rooms', 'deleted']
             Room.findById(data).remove ->
-              broadcast 'kick', data
+              broadcast '17', data
               updateRooms()
               Message.query N1QL.fromString 'delete from `test1` where room = "' + data + '"'
 
-          when 'comment' then console.log data
+          when '18' then console.log data
 
-          when 'get friends' then updateFriends socket, data
+          when '19' then updateFriends socket, data
 
-          when 'add friend'
+          when '20'
             if typeof data == 'string' then data = JSON.parse(data)
             User.findById data.userid, (err, user) ->
               #if (err) return console.log(err);
@@ -156,7 +195,7 @@ module.exports = (sockjs, connections) ->
                 #if (err) console.log(err);
                 updateFriends socket, data.userid
 
-          when 'remove friend'
+          when '21'
             if typeof data == 'string' then data = JSON.parse(data)
             User.findById data.userid, (err, user) ->
               #if (err) return console.log(err);
@@ -165,29 +204,29 @@ module.exports = (sockjs, connections) ->
                   #if (err) return console.log(err);
                   updateFriends socket, data.userid
 
-          when 'get user'
+          when '22'
             User.findById data, (err, user) ->
               #if (err) return console.log(err);
               unless user? then user = '404'
-              emit socket, 'user', user
+              emit socket, '23', user
 
-          when 'admin:get users'
+          when '24'
             if typeof data == 'string' then data = JSON.parse(data)
             getUsers socket, data
 
-          when 'set rank'
+          when '25'
             if typeof data == 'string' then data = JSON.parse data
             User.update {_id: data.user._id}, {rank: data.rank}, ->
               getUsers()
 
-          when 'admin:delete user'
+          when '26'
             if typeof data == 'string' then data = JSON.parse(data)
             User.findById(data).remove ->
               getUsers socket
 
-          when 'leave room' then leaveRoom socket, data
+          when '27' then leaveRoom socket, data
 
-          when 'admin:get stats'
+          when '28'
             Stats.model.findOrCreate {date: data}, (err, today, created) ->
               Stats.model.aggregate [
                 {$group:
@@ -219,7 +258,7 @@ module.exports = (sockjs, connections) ->
                       signedIn: '$usersSignedIn'
                 }
               ], (err, all) ->
-                emit socket, 'admin:stats', {today: today, all: all[0]}
+                emit socket, '29', {today: today, all: all[0]}
 
       #Disconnect
       socket.on 'close', ->
@@ -235,9 +274,9 @@ module.exports = (sockjs, connections) ->
     User.find {}, (err, users) ->
       unless users? then users = '404'
       unless socket?
-        broadcast 'admin:users', users
+        broadcast '30', users
       else
-        emit socket, 'admin:users', users
+        emit socket, '30', users
 
   updateRooms = ->
     Room.find {}, (err, found) ->
@@ -254,7 +293,7 @@ module.exports = (sockjs, connections) ->
           if f
             arr.push rooms[id][i]
         found[cur].online = arr.length
-      broadcast 'rooms', found
+      broadcast '31', found
       
   leaveRoom = (socket, id) ->
     if rooms[id]? and rooms[id].length > 0
@@ -300,11 +339,11 @@ module.exports = (sockjs, connections) ->
           f = false
           break
       if f then res.push users[rooms[roomid][cur]].user
-    emitRoom roomid, 'users', res
+    emitRoom roomid, '32', res
 
   updateHistory = (roomid) ->
     getHistory roomid, (messages) ->
-      emitRoom roomid, 'history',
+      emitRoom roomid, '3',
         id: roomid
         data: messages
 
@@ -357,12 +396,11 @@ module.exports = (sockjs, connections) ->
       if user
         User.find { _id: $in: user.friends }, (err, friends) ->
           if err then throw err
-          console.log friends
-          if friends? then emit socket, 'friends', friends
+          if friends? then emit socket, '33', friends
 
   {
     init: init
     updateRooms: updateRooms
-    autoLogin: -> broadcast 'autoLogin'
-    autoLogout: -> broadcast 'autoLogout'
+    autoLogin: -> broadcast '34'
+    autoLogout: -> broadcast '35'
   }

@@ -10,9 +10,9 @@ chatio.controller 'myroomsCtrl', ['$scope', '$http', '$rootScope', '$timeout', '
   $http.get('/getuser').then (response) ->
     $timeout ->
       $rootScope.user = response.data
-      socket.emit 'get rooms', $rootScope.user._id
+      socket.emit '14', $rootScope.user._id
 
-  listeners.push socket.on 'rooms', (rooms) ->
+  listeners.push socket.on '31', (rooms) ->
     for room, i in rooms
       if room.owner != $rootScope.user._id then rooms.splice i, 1
     $timeout ->
@@ -21,7 +21,7 @@ chatio.controller 'myroomsCtrl', ['$scope', '$http', '$rootScope', '$timeout', '
 
   $scope.delete = (room) ->
     if room.online == 0 and confirm('Are you sure you want to delete the "' + room.name + '" room?')
-      socket.emit 'delete room',
+      socket.emit '15',
         roomid: room._id
         userid: $rootScope.user._id
 

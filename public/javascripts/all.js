@@ -1098,7 +1098,7 @@ hostname = window.location.host;
 
 chatio.factory('autoLogin', [
   '$rootScope', '$location', '$route', '$http', 'socket', 'template', function($rootScope, $location, $route, $http, socket, template) {
-    socket.on('autoLogin', function(data) {
+    socket.on('34', function(data) {
       return $http.get('/getuser').then(function(response) {
         if (response.data !== '401') {
           template.setDefault('/chat');
@@ -1113,7 +1113,7 @@ chatio.factory('autoLogin', [
 
 chatio.factory('autoLogout', [
   '$rootScope', '$location', '$route', '$http', 'socket', 'template', function($rootScope, $location, $route, $http, socket, template) {
-    socket.on('autoLogout', function(data) {
+    socket.on('35', function(data) {
       return $http.get('/getuser').then(function(response) {
         if (response.data === '401') {
           template.setDefault('/index');
@@ -1184,28 +1184,28 @@ chatio.controller('adminpanelCtrl', [
       return results;
     });
     $scope.loadingRooms = $scope.loadingUsers = $scope.loadingStats = true;
-    socket.emit('admin:get stats', (new Date()).format('isoDate'));
-    socket.emit('get rooms');
+    socket.emit('28', (new Date()).format('isoDate'));
+    socket.emit('14');
     $scope.loadUsers = function() {
-      return socket.emit('admin:get users', {
+      return socket.emit('24', {
         recordsPerPage: $scope.recordsPerPage,
         page: $scope.usersPage
       });
     };
     $scope.loadUsers();
-    listeners.push(socket.on('admin:stats', function(stats) {
+    listeners.push(socket.on('29', function(stats) {
       return $timeout(function() {
         $scope.stats = stats;
         return $scope.loadingStats = false;
       });
     }));
-    listeners.push(socket.on('rooms', function(rooms) {
+    listeners.push(socket.on('31', function(rooms) {
       return $timeout(function() {
         $scope.rooms = rooms;
         return $scope.loadingRooms = false;
       });
     }));
-    listeners.push(socket.on('admin:users', function(users) {
+    listeners.push(socket.on('30', function(users) {
       return $timeout(function() {
         $scope.changingRank = {};
         $scope.users = users;
@@ -1214,19 +1214,19 @@ chatio.controller('adminpanelCtrl', [
     }));
     $scope.deleteRoom = function(room) {
       if (confirm('Are you sure you want to delete the ' + room.name + ' room?')) {
-        return socket.emit('admin:delete room', room._id);
+        return socket.emit('16', room._id);
       }
     };
     $scope.setRank = function(user, rank) {
       $scope.changingRank[user._id] = true;
-      return socket.emit('set rank', {
+      return socket.emit('25', {
         user: user,
         rank: rank
       });
     };
     return $scope.deleteUser = function(user) {
       if (confirm('Are you sure want to delete the ' + user.username + ' user?')) {
-        return socket.emit('admin:delete user', user._id);
+        return socket.emit('26', user._id);
       }
     };
   }
@@ -1246,8 +1246,8 @@ chatio.controller('chatCtrl', [
       return results;
     });
     userInit = function() {
-      socket.emit('get friends', $rootScope.user._id);
-      listeners.push(socket.on('friends', function(friends) {
+      socket.emit('19', $rootScope.user._id);
+      listeners.push(socket.on('33', function(friends) {
         $scope.loading_friends = false;
         return $scope.friends = friends;
       }));
@@ -1266,7 +1266,7 @@ chatio.controller('chatCtrl', [
         return userInit();
       }
     });
-    listeners.push(socket.on('users', function(users) {
+    listeners.push(socket.on('32', function(users) {
       return $scope.users = users;
     }));
     $scope.$on('rendering finished', function() {
@@ -1279,20 +1279,20 @@ chatio.controller('chatCtrl', [
           return alert('This user is already your friend');
         }
       }
-      return socket.emit('add friend', {
+      return socket.emit('20', {
         userid: $rootScope.user._id,
         friendid: id
       });
     };
     $scope.removeFriend = function(id) {
-      return socket.emit('remove friend', {
+      return socket.emit('21', {
         userid: $rootScope.user._id,
         friendid: id
       });
     };
     $rootScope.popups = popup.list;
     notifySound = ngAudio.load('../sounds/notify.mp3');
-    listeners.push(socket.on('listener event', function(data) {
+    listeners.push(socket.on('10', function(data) {
       if (data.to !== $rootScope.user._id) {
         return;
       }
@@ -1328,8 +1328,8 @@ chatio.controller('chatCtrl', [
       }
       if (createNew) {
         if (params["private"]) {
-          socket.emit('get user', id);
-          return close = socket.on('user', function(user) {
+          socket.emit('22', id);
+          return close = socket.on('23', function(user) {
             var newTab;
             if (user === '404' || id !== user._id) {
               return;
@@ -1346,8 +1346,8 @@ chatio.controller('chatCtrl', [
             return close();
           });
         } else {
-          socket.emit('get room', id);
-          return close = socket.on('room', function(room) {
+          socket.emit('12', id);
+          return close = socket.on('13', function(room) {
             var newTab;
             if (room === '404') {
               return;
@@ -1377,7 +1377,7 @@ chatio.controller('chatCtrl', [
     $rootScope.closeTab = function(tab) {
       var count;
       if (!tab["private"]) {
-        socket.emit('leave room', tab.id);
+        socket.emit('27', tab.id);
       }
       count = tabs.count();
       return tabs.close(tab.id, function(pos) {
@@ -1391,7 +1391,7 @@ chatio.controller('chatCtrl', [
       });
     };
     return $scope.clearChat = function() {
-      socket.emit('clear history', $rootScope.tab.id);
+      socket.emit('11', $rootScope.tab.id);
       return $scope.$broadcast('clear history', $rootScope.tab.id);
     };
   }
@@ -1404,12 +1404,12 @@ chatio.controller('sendMsgCtrl', [
         return;
       }
       if ($rootScope.tab["private"]) {
-        socket.emit('send private message', JSON.stringify({
+        socket.emit('8', JSON.stringify({
           to: $rootScope.tab.id,
           msg: msg
         }));
       } else {
-        socket.emit('send message', JSON.stringify({
+        socket.emit('6', JSON.stringify({
           roomid: $rootScope.tab.id,
           msg: msg
         }));
@@ -1486,7 +1486,7 @@ chatio.controller('headCtrl', [
       }
       return res;
     };
-    return listeners.push(socket.on('kick', function(roomid) {
+    return listeners.push(socket.on('17', function(roomid) {
       var count;
       count = tabs.count();
       return tabs.close(roomid, function(pos) {
@@ -1608,10 +1608,10 @@ chatio.controller('myroomsCtrl', [
     $http.get('/getuser').then(function(response) {
       return $timeout(function() {
         $rootScope.user = response.data;
-        return socket.emit('get rooms', $rootScope.user._id);
+        return socket.emit('14', $rootScope.user._id);
       });
     });
-    listeners.push(socket.on('rooms', function(rooms) {
+    listeners.push(socket.on('31', function(rooms) {
       var i, j, len, room;
       for (i = j = 0, len = rooms.length; j < len; i = ++j) {
         room = rooms[i];
@@ -1626,7 +1626,7 @@ chatio.controller('myroomsCtrl', [
     }));
     $scope["delete"] = function(room) {
       if (room.online === 0 && confirm('Are you sure you want to delete the "' + room.name + '" room?')) {
-        return socket.emit('delete room', {
+        return socket.emit('15', {
           roomid: room._id,
           userid: $rootScope.user._id
         });
@@ -1684,12 +1684,12 @@ chatio.controller('privateCtrl', [
           if (typeof companion === 'string') {
             companion = JSON.parse(companion);
           }
-          socket.emit('new user', JSON.stringify({
+          socket.emit('0', JSON.stringify({
             user: $rootScope.user,
             room: companion
           }));
           $rootScope.title = ' - ' + companion.username;
-          $scope.listeners.push(socket.on('private history', function(data) {
+          $scope.listeners.push(socket.on('5', function(data) {
             var id, pos;
             if (data.from !== $rootScope.user._id || data.to !== tab.id) {
               return;
@@ -1722,14 +1722,14 @@ chatio.controller('privateCtrl', [
               $scope.scrollGlue = scroll;
               return $scope.loadingHistory = true;
             });
-            return socket.emit('get private history', {
+            return socket.emit('4', {
               id1: $rootScope.user._id,
               id2: companion._id,
               skip: $scope.messages.length
             });
           };
           $scope.loadHistory();
-          return $scope.listeners.push(socket.on('new private message', function(data) {
+          return $scope.listeners.push(socket.on('9', function(data) {
             if (data.to === $rootScope.user._id && data.from !== tab.id || data.from === $rootScope.user._id && data.to !== tab.id) {
               return;
             }
@@ -1745,8 +1745,8 @@ chatio.controller('privateCtrl', [
             }), 100);
           }));
         };
-        socket.emit('get user', tab.id);
-        return close = socket.on('user', function(companion) {
+        socket.emit('22', tab.id);
+        return close = socket.on('23', function(companion) {
           if (companion._id !== tab.id) {
             return;
           }
@@ -1838,14 +1838,14 @@ chatio.controller('roomCtrl', [
             room = JSON.parse(room);
           }
           showPasswordModal(function() {
-            socket.emit('new user', {
+            socket.emit('0', {
               user: $scope.user,
               room: room
             });
             $rootScope.title = ' - ' + room.name;
             user.rank = $rootScope.user.rank = Math.max(user.rank, room.users[user._id] != null ? room.users[user._id] : 0);
             tab.unread = 0;
-            $scope.listeners.push(socket.on('history', function(data) {
+            $scope.listeners.push(socket.on('3', function(data) {
               var id, pos;
               if (data.id !== tab.id) {
                 return;
@@ -1878,13 +1878,13 @@ chatio.controller('roomCtrl', [
                 $scope.scrollGlue = scroll;
                 return $scope.loadingHistory = true;
               });
-              return socket.emit('get history', {
+              return socket.emit('2', {
                 roomid: room._id,
                 skip: $scope.messages.length
               });
             };
             $scope.loadHistory();
-            return $scope.listeners.push(socket.on('new message', function(data) {
+            return $scope.listeners.push(socket.on('7', function(data) {
               if (data.room !== tab.id) {
                 return;
               }
@@ -1909,8 +1909,8 @@ chatio.controller('roomCtrl', [
             }
           });
         };
-        socket.emit('get room', tab.id);
-        return close = socket.on('room', function(room) {
+        socket.emit('12', tab.id);
+        return close = socket.on('13', function(room) {
           if (room._id !== tab.id) {
             return;
           }
@@ -1938,11 +1938,11 @@ chatio.controller('roomsCtrl', [
     $scope.rooms = [];
     $scope.users = [];
     $scope.loading = true;
-    listeners.push(socket.on('rooms', function(data) {
+    listeners.push(socket.on('31', function(data) {
       $scope.loading = false;
       return $scope.rooms = data;
     }));
-    socket.emit('get rooms');
+    socket.emit('14');
     $scope.$on('rendering finished', function(event, data) {
       return jQuery(function() {
         return jQuery('[data-toggle="tooltip"]').tooltip();
@@ -1950,8 +1950,8 @@ chatio.controller('roomsCtrl', [
     });
     return $scope.getUser = function(id) {
       var close;
-      socket.emit('get user', id);
-      return close = socket.on('user', function(user) {
+      socket.emit('22', id);
+      return close = socket.on('23', function(user) {
         if (user._id !== id) {
           return;
         }
@@ -2129,7 +2129,7 @@ chatio.factory('socket', [
       init: function() {
         var sockInit;
         sockInit = $q.defer();
-        sock = new SockJS(hostname + '/sockjs');
+        sock = new SockJS(hostname + "/sockjs");
         sock.onopen = function() {
           return ready.resolve();
         };
