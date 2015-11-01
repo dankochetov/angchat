@@ -22,7 +22,7 @@ module.exports = (grunt) ->
 		
 		uglify:
 			minify:
-				src: 'public/javascripts/compiled/all.js'
+				src: 'public/javascripts/compiled/*.js'
 				dest: 'public/javascripts/all.js'
 				options:
 					bare: true
