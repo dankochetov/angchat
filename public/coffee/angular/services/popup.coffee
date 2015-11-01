@@ -9,14 +9,10 @@ chatio.factory 'popup', ['$timeout', ($timeout) ->
           time = 300
         $timeout (->
           list.push msg
-          return
         ), time
         $timeout (->
           list.splice 0, 1
-          return
         ), 5000 + time
-        return
-      return
     list: list
   }
 ]

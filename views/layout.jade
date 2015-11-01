@@ -1,6 +1,10 @@
 doctype html
-html(ng-app='chatio' ng-cloak)
+html(ng-app='chatio', ng-cloak)
 	head(ng-controller='headCtrl')
+		- if (!user) user = null
+		script.
+			config = !{JSON.stringify(config)}
+			user = !{JSON.stringify(user)}
 		meta(name='viewport', content='width=device-width, initial-scale=1')
 		link(rel='stylesheet', href='/stylesheets/all.css')
 		script(src='/javascripts/all.js')

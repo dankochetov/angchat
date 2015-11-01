@@ -1,16 +1,15 @@
-chatio.controller 'indexCtrl', ['$scope', '$rootScope', '$http', '$route', 'autoLogin', 'template', ($scope, $rootScope, $http, $route, autoLogin, template) ->
+chatio.controller 'indexCtrl', ['$scope', '$rootScope', '$http', '$route', 'template', ($scope, $rootScope, $http, $route, template) ->
 
   $rootScope.title = ' - Main'
 
-  $http.get('/getuser').then (response) ->
-    if response.data != '401'
-      template.go '/chat'
-      template.clear()
+  if $rootScope.user?
+    template.go '/chat'
+    template.clear()
 
   $scope.fb_login = ->
     $scope.showLoading = true
     FB.login (response) ->
-      if response.status == 'connected'
+      if response.status is 'connected'
         window.location = '/signin/fb'
       else
         $scope.showLoading = false
@@ -19,7 +18,7 @@ chatio.controller 'indexCtrl', ['$scope', '$rootScope', '$http', '$route', 'auto
     $scope.showLoading = true
     VK.init apiId: '5062854'
     VK.Auth.getLoginStatus (response) ->
-      if !response.session
+      if not response.session
         VK.Auth.login (response) ->
           if response.session
             window.location = '/signin/vk'
@@ -36,27 +35,35 @@ chatio.controller 'indexCtrl', ['$scope', '$rootScope', '$http', '$route', 'auto
 
 ]
 
-chatio.controller 'signinCtrl', ['$scope', '$http', 'autoLogin', 'template', ($scope, $http, autoLogin, template) ->
+chatio.controller 'signinCtrl', ['$scope', '$http', 'template', ($scope, $http, template) ->
 
   $scope.submit = ->
     $scope.showLoading = true
     $http.post('/signin', $scope.formData).then (response) ->
-      if response.data != 'success'
+      if response.data isnt 'success'
         $scope.showLoading = false
         $scope.errors = response.data
+      else
+        template.setDefault '/chat'
+        template.clear()
+        window.location = '/'
 
   $scope.template = template
 
 ]
 
-chatio.controller 'signupCtrl', ['$scope', '$http', 'autoLogin', 'template', ($scope, $http, autoLogin, template) ->
+chatio.controller 'signupCtrl', ['$scope', '$http', 'template', ($scope, $http, template) ->
 
   $scope.submit = ->
     $scope.showLoading = true
     $http.post('/signup', $scope.formData).then (response) ->
-      if response.data != 'success'
+      if response.data isnt 'success'
         $scope.showLoading = false
         $scope.errors = response.data
+      else
+        template.setDefault '/chat'
+        template.clear()
+        window.location = '/'
 
   $scope.template = template
 

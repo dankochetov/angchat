@@ -1,21 +1,22 @@
-chatio.factory 'socket', ['$rootScope', '$q', ($rootScope, $q)->
+chatio.factory 'socket', ['$rootScope', '$q', '$http', ($rootScope, $q, $http)->
     ready = $q.defer()
     sock = undefined
     listeners = []
     {
       init: ->
         sockInit = $q.defer()
-        sock = new SockJS "#{hostname}/sockjs"
+        $http.get("#{HOST_API}/api/getsocketport").then (response)->
+          sock = new SockJS "#{HOST}:#{response.data}/sockjs"
 
-        sock.onopen = ->
-          ready.resolve()
+          sock.onopen = ->
+            ready.resolve()
 
-        sock.onmessage = (e)->
-          data = JSON.parse e.data
-          for i of listeners
-            if i is data.event
-              for k of listeners[i]
-                listeners[i][k].callback data.data
+          sock.onmessage = (e)->
+            data = JSON.parse e.data
+            for i of listeners
+              if i.toString() is data.event.toString()
+                for k of listeners[i]
+                  listeners[i][k].callback data.data
 
       on: (event, callback)->
         if not listeners[event]? then listeners[event] = [] 
@@ -34,8 +35,8 @@ chatio.factory 'socket', ['$rootScope', '$q', ($rootScope, $q)->
 
       emit: (event, data)->
         ready.promise.then ->
-          sock.send JSON.stringify(
+          sock.send JSON.stringify
             event: event
-            data: data)
+            data: data
     }
 ]

@@ -10,12 +10,15 @@ chatio = angular.module 'chatio', [
 ]
 
 chatio.directive 'actionOnFinish', ->
-	(scope) -> if scope.$last then scope.$emit 'rendering finished'
+	(scope)-> if scope.$last then scope.$emit 'rendering finished'
 
-chatio.config ['$locationProvider', ($locationProvider) ->
+chatio.config ['$locationProvider', ($locationProvider)->
 	$locationProvider.html5Mode
 		enabled: true
 		requireBase: false
 ]
 
-hostname = window.location.host
+HOST = window.location.hostname
+
+HOST_HTML = 'http://' + window.location.hostname + ":#{config.ports.html}"
+HOST_API = 'http://' + window.location.hostname + ":#{config.ports.api}"

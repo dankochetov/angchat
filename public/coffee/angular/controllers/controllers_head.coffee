@@ -8,15 +8,15 @@ chatio.controller 'headCtrl', ['$scope', '$rootScope', '$localStorage', '$http',
 	socket.init()
 	$rootScope.$storage = $localStorage.$default(tabs: [])
 
-	$http.get('/getuser').then (response) -> if response != '401' then $rootScope.user = response.data
+	$rootScope.user = user
 
 	$rootScope.showUsername = (user) ->
 		res = user.username
-		res += ' <img src="/images/signin/vk.png">' if user.vkontakte
-		res += ' <img src="images/signin/fb.png">' if user.facebook
+		if user.vkontakte then res += ' <img src="/images/signin/vk.png">'
+		if user.facebook then res += ' <img src="images/signin/fb.png">'
 		res
 
-	listeners.push socket.on '17', (roomid) ->
+	listeners.push socket.on config.events['kick'], (roomid) ->
 		count = tabs.count()
 		tabs.close roomid, (pos) ->
 			if pos > 0

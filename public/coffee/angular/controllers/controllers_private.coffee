@@ -31,14 +31,14 @@ chatio.controller 'privateCtrl', ['$scope', '$routeParams', '$timeout', '$q', '$
     tab.tabInit.promise.then (tab)->
 
       init = (companion)->
-        companion = JSON.parse(companion) if typeof companion == 'string'
-        socket.emit '0', JSON.stringify
+        if typeof companion is 'string' then companion = JSON.parse(companion)
+        socket.emit config.events['new user'], JSON.stringify
           user: $rootScope.user
           room: companion
         $rootScope.title = ' - ' + companion.username
 
-        $scope.listeners.push socket.on '5', (data)->
-          if data.from != $rootScope.user._id or data.to != tab.id then return
+        $scope.listeners.push socket.on config.events['private history'], (data)->
+          if data.from isnt $rootScope.user._id or data.to isnt tab.id then return
 
           $scope.tabActiveInit?(tab)
           delete $scope.tabActiveInit
@@ -57,21 +57,21 @@ chatio.controller 'privateCtrl', ['$scope', '$routeParams', '$timeout', '$q', '$
           $timeout ->
             $scope.scrollGlue = scroll
             $scope.loadingHistory = true
-          socket.emit '4',
+          socket.emit config.events['get private history'],
             id1: $rootScope.user._id
             id2: companion._id
             skip: $scope.messages.length   
         $scope.loadHistory()
 
-        $scope.listeners.push socket.on '9', (data)->
-          if data.to == $rootScope.user._id and data.from != tab.id or data.from == $rootScope.user._id and data.to != tab.id then return 
+        $scope.listeners.push socket.on config.events['new private message'], (data)->
+          if data.to is $rootScope.user._id and data.from isnt tab.id or data.from is $rootScope.user._id and data.to isnt tab.id then return 
           ++$scope.totalMessages
           $timeout -> $scope.scrollGlue = true
           $timeout -> $scope.messages.push data
           $timeout (-> $scope.scrollGlue = false ), 100
 
-      socket.emit '22', tab.id
-      close = socket.on '23', (companion)->
+      socket.emit config.events['get user'], tab.id
+      close = socket.on config.events['user'], (companion)->
         if companion._id isnt tab.id then return 
         init companion
         close()

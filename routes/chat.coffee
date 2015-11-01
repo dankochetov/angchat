@@ -1,5 +1,8 @@
 require 'coffee-script'
 
+jsonfile = require 'jsonfile'
+config = jsonfile.readFileSync 'config.json'
+
 express = require 'express'
 router = express.Router()
 
@@ -8,13 +11,13 @@ Room = require '../models/room'
 Stats = require '../models/stats'
 
 router.get '/', (req, res, next) ->
-  res.render 'chat/default'
+  res.render 'chat/default', config: config
 
 router.get '/rooms', (req, res, next) ->
-  res.render 'chat/rooms'
+  res.render 'chat/rooms', config: config
 
 router.get '/createroom', (req, res, next) ->
-  res.render 'chat/createroom'
+  res.render 'chat/createroom', config: config
 
 router.post '/createroom', (req, res, next) ->
 
@@ -58,19 +61,19 @@ router.post '/createroom', (req, res, next) ->
             id: room._id)
 
 router.get '/myrooms', (req, res, next) ->
-  res.render 'chat/myrooms'
+  res.render 'chat/myrooms', config: config
 
 router.get '/room/:room', (req, res, next) ->
   Room.findById req.params.room, (err, room) ->
     if err or !room
       res.end 'Error: no such room'
     else
-      res.render 'chat/room'
+      res.render 'chat/room', config: config
 
 router.get '/user/:user', (req, res, next) ->
   User.findById req.params.user, (err, user) ->
     if err or !user then return res.redirect('/rooms')
 
-  res.render 'chat/room'
+  res.render 'chat/room', config: config
 
 module.exports = router

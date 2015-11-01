@@ -20,6 +20,7 @@ chatio.factory 'template', ['$rootScope', '$localStorage', ($rootScope, $localSt
         $rootScope.templateUrl = root.history.splice(-1, 1)[0]
         $localStorage.templateUrl = $rootScope.templateUrl
     clear: -> root.history = []
+    get: -> $localStorage.templateUrl
   }
 
 ]

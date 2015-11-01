@@ -4,7 +4,10 @@
  * Module dependencies.
  */
 
-var app = require('../index');
+require('coffee-script');
+require('coffee-script/register');
+
+var app = require('../ps/app');
 var debug = require('debug')('chatio:server');
 var http = require('http');
 

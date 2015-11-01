@@ -6,8 +6,8 @@ chatio.controller 'chatCtrl', ['$scope', '$rootScope', '$route', '$routeParams',
       listener()
       
   userInit = ->
-    socket.emit '19', $rootScope.user._id
-    listeners.push socket.on '33', (friends) ->
+    socket.emit config.events['get friends'], $rootScope.user._id
+    listeners.push socket.on config.events['friends'], (friends) ->
       $scope.loading_friends = false
       $scope.friends = friends
     tabs.init()
@@ -16,15 +16,13 @@ chatio.controller 'chatCtrl', ['$scope', '$rootScope', '$route', '$routeParams',
   $scope.tabs = tabs
   $scope.friends = []
   $scope.loading_friends = true
-  $http.get('/getuser').then (response) ->
-    if response.data == '401'
-      template.go('/index')
-      template.clear()
-    else
-      $rootScope.user = response.data
-      userInit()
+  if not $rootScope.user?
+    template.go '/index'
+    template.clear()
+  else
+    userInit()
 
-  listeners.push socket.on '32', (users) ->
+  listeners.push socket.on config.events['users'], (users) ->
     $scope.users = users
 
   $scope.$on 'rendering finished', ->
@@ -34,18 +32,18 @@ chatio.controller 'chatCtrl', ['$scope', '$rootScope', '$route', '$routeParams',
     for friend of $scope.friends
       if $scope.friends[friend]._id == id
         return alert('This user is already your friend')
-    socket.emit '20',
+    socket.emit config.events['add friend'],
       userid: $rootScope.user._id
       friendid: id
 
   $scope.removeFriend = (id) ->
-    socket.emit '21',
+    socket.emit config.events['remove friend'],
       userid: $rootScope.user._id
       friendid: id
 
   $rootScope.popups = popup.list
   notifySound = ngAudio.load('../sounds/notify.mp3')
-  listeners.push socket.on '10', (data) ->
+  listeners.push socket.on config.events['listener event'], (data) ->
     if data.to != $rootScope.user._id then return
     if $rootScope.tab.id != data.from
       $scope.openTab data.from,
@@ -69,8 +67,8 @@ chatio.controller 'chatCtrl', ['$scope', '$rootScope', '$route', '$routeParams',
 
     if createNew
       if params.private
-        socket.emit '22', id
-        close = socket.on '23', (user) ->
+        socket.emit config.events['get user'], id
+        close = socket.on config.events['user'], (user) ->
           if user == '404' or id != user._id then return 
           newTab = 
             active: params.open or false
@@ -82,8 +80,8 @@ chatio.controller 'chatCtrl', ['$scope', '$rootScope', '$route', '$routeParams',
           tabs.open newTab
           close()
       else
-        socket.emit '12', id
-        close = socket.on '13', (room) ->
+        socket.emit config.events['get room'], id
+        close = socket.on config.events['room'], (room) ->
           if room == '404' then return
           newTab = 
             active: params.open or false
@@ -101,7 +99,7 @@ chatio.controller 'chatCtrl', ['$scope', '$rootScope', '$route', '$routeParams',
 
   $rootScope.closeTab = (tab) ->
     if !tab.private
-      socket.emit '27', tab.id
+      socket.emit config.events['leave room'], tab.id
     count = tabs.count()
     tabs.close tab.id, (pos) ->
       if pos > 0
@@ -112,7 +110,7 @@ chatio.controller 'chatCtrl', ['$scope', '$rootScope', '$route', '$routeParams',
         tabs.active 'root'
 
   $scope.clearChat = ->
-    socket.emit '11', $rootScope.tab.id
+    socket.emit config.events['clear history'], $rootScope.tab.id
     $scope.$broadcast 'clear history', $rootScope.tab.id
 
 ]
@@ -122,11 +120,11 @@ chatio.controller 'sendMsgCtrl', ['$scope', '$rootScope', 'socket', ($scope, $ro
   $scope.submit = (msg) ->
     if $scope.messageForm.$invalid then return
     if $rootScope.tab.private
-      socket.emit '8', JSON.stringify
+      socket.emit config.events['send private message'], JSON.stringify
         to: $rootScope.tab.id
         msg: msg
     else
-      socket.emit '6', JSON.stringify
+      socket.emit config.events['send message'], JSON.stringify
         roomid: $rootScope.tab.id
         msg: msg
     $scope.msg = ''

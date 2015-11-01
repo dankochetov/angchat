@@ -1,11 +1,11 @@
-chatio.factory 'tabs', ['$rootScope', '$timeout', '$localStorage', '$q', ($rootScope, $timeout, $localStorage, $q) ->
+chatio.factory 'tabs', ['$rootScope', '$timeout', '$localStorage', '$q', ($rootScope, $timeout, $localStorage, $q)->
 
   flush = ->
     $rootScope.$storage.tabs = $rootScope.tabs
     $rootScope.$storage.tab = $rootScope.tab
     $rootScope.$storage.rootTab = $rootScope.rootTab
 
-  active = (id, callback, params = {}) ->
+  active = (id, callback, params = {})->
     tabsInit.promise.then ->
       $timeout ->
         if id == 'root'
@@ -35,7 +35,7 @@ chatio.factory 'tabs', ['$rootScope', '$timeout', '$localStorage', '$q', ($rootS
   tabsInit = $q.defer()
 
   {
-    init: (callback) ->
+    init: (callback)->
       $rootScope.tabs = $rootScope.$storage.tabs
       for tab in $rootScope.tabs
         tab.tabInit = $q.defer()
@@ -47,7 +47,7 @@ chatio.factory 'tabs', ['$rootScope', '$timeout', '$localStorage', '$q', ($rootS
       active $rootScope.tab.id
       callback?()
 
-    open: (data, callback) ->
+    open: (data, callback)->
       for tab in $rootScope.tabs
         if tab.id == data.id then return
       $timeout ->
@@ -56,7 +56,7 @@ chatio.factory 'tabs', ['$rootScope', '$timeout', '$localStorage', '$q', ($rootS
         $rootScope.tabs.push data
         if data.active then active data.id, callback, force: true
 
-    close: (id, callback) ->
+    close: (id, callback)->
       tabsInit.promise.then ->
         for num of $rootScope.tabs
           if $rootScope.tabs[num].id is id
@@ -67,7 +67,7 @@ chatio.factory 'tabs', ['$rootScope', '$timeout', '$localStorage', '$q', ($rootS
               callback? res
 
     active: active
-    addUnread: (id, callback) ->
+    addUnread: (id, callback)->
       tabsInit.promise.then ->
         for i of $rootScope.tabs
           if $rootScope.tabs[i].id is id
