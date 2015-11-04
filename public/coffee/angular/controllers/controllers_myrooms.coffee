@@ -14,12 +14,11 @@ chatio.controller 'myroomsCtrl', ['$scope', '$http', '$rootScope', '$timeout', '
   socket.emit config.events['get rooms'], $rootScope.user._id
 
   listeners.push socket.on config.events['rooms'], (rooms) ->
-    if rooms.length > 0
-      for room, i in rooms
-        if room.owner isnt $rootScope.user._id then rooms.splice i, 1
-      $timeout ->
-        $scope.loading = false
-        $scope.rooms = rooms
+    for i, room in rooms
+      if room.owner isnt $rootScope.user._id then rooms.splice i, 1
+    $timeout ->
+      $scope.loading = false
+      $scope.rooms = rooms
 
   $scope.delete = (room) ->
     if room.online == 0 and confirm('Are you sure you want to delete the "' + room.name + '" room?')
