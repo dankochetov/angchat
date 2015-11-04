@@ -1,13 +1,15 @@
 require 'coffee-script'
 jsonfile = require 'jsonfile'
 config = jsonfile.readFileSync 'config.json'
-
+conn = require('../mongoose')()
 
 express = require 'express'
 router = express.Router()
 
-Room = require '../models/room'
-User = require '../models/user'
+Room = require('../models/room')
+  conn: conn
+User = require('../models/user')
+  conn: conn
 
 router.all '/*', (req, res, next)->
   if not req.isAuthenticated()

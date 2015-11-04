@@ -1,4 +1,5 @@
 require 'coffee-script'
+express = require 'express'
 childProcess = require 'child_process'
 jsonfile = require 'jsonfile'
 config = jsonfile.readFileSync 'config.json'
@@ -6,53 +7,61 @@ redis =
 	pub: require('./redis')()
 	sub: require('./redis')()
 
-count = total = 0
+if process.env.PORT?
+	config.ports[0].port = process.env.PORT
+	jsonfile.writeFileSync 'config.json', config
 
-countTotal = (a)->
-	for i, v of a
-		if typeof v is 'number'
-			++total
-		else
-			countTotal v
-
-countTotal config.ports
-
-redis.sub.subscribe 'port'
-redis.sub.subscribe 'message'
+redis.sub.subscribe 'client'
 
 redis.sub.on 'message', (ch, data)->
-	data = JSON.parse data
+	
 	switch ch
+		when 'client'
+			data = JSON.parse data
+			switch data.event
+				when 'exit'
+					console.log "#{data.ps}@#{data.port} exited. Restarting..."
+					new Process data.ps, data.port
 
-		when 'port'
-			if data.ps is 'socket'
-				for i, port of config.ports.sockets
-					if port is data.old
-						config.ports.sockets[i] = data.new
-			else
-				config.ports[data.ps] = data.new
-			console.log "#{data.ps} is running on port #{data.new}"
-			jsonfile.writeFileSync 'config.json', config, spaces: 2
-			++count
-			if count is total
-				redis.pub.publish 'init', '{}'
+				when 'message' then console.log "#{data.ps}@#{data.port}: #{data.text}"
 
-		when 'message' then console.log "#{data.ps}@#{data.port}: #{data.text}"
+				when 'error'
+					console.log data.error
+					process.exit 1
 
-		when 'exit'
-			console.log "#{data.ps}@#{data.port} exited. Restarting..."
-			new Process data.ps, data.port
+f = true
+ps = null
 
-class Process
-	constructor: (@cmd, @port)->
-		@ps = childProcess.exec "coffee ps/#{@cmd}.coffee #{@port}"
+# start socket(s) first, then api, then html
+started = {}
 
-for cmd, ports of config.ports
-	if cmd isnt 'sockets'
-		new Process cmd, ports
-	else
-		for i, port of ports
-			new Process 'socket', port
+startProcess = (data)->
+	# launch all processes with matching process in list. Skip already started processes
+	for item in config.ports
+		if started[item.port] then continue
+		for ps in item.ps
+			if ps is data
+				started[item.port] = true
+				if f
+					require('./process')
+						port: item.port
+						arr: item.ps
+					f = false
+				else
+					t = childProcess.exec("coffee process.coffee #{item.port} #{item.ps.join ' '}")
+					t.stdout.on 'data', (data)->
+						process.stdout.write data
+					t.stderr.on 'data', (data)->
+						process.stderr.write data
+				break
+
+startProcess 'socket'
+startProcess 'api'
+startProcess 'html'
+
+redis.pub.publish 'server', JSON.stringify
+	event: 'init'
 
 process.on 'exit', ->
-	redis.pub.publish 'exit', '{}'
+	redis.pub.publish 'server', JSON.stringify
+		event: 'exit'

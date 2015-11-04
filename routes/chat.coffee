@@ -1,4 +1,5 @@
 require 'coffee-script'
+conn = require('../mongoose')()
 
 jsonfile = require 'jsonfile'
 config = jsonfile.readFileSync 'config.json'
@@ -6,9 +7,12 @@ config = jsonfile.readFileSync 'config.json'
 express = require 'express'
 router = express.Router()
 
-User = require '../models/user'
-Room = require '../models/room'
-Stats = require '../models/stats'
+User = require('../models/user')
+  conn: conn
+Room = require('../models/room')
+  conn: conn
+Stats = require('../models/stats')
+  conn: conn
 
 router.get '/', (req, res, next) ->
   res.render 'chat/default', config: config

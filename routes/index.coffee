@@ -3,16 +3,18 @@ jsonfile = require 'jsonfile'
 config = jsonfile.readFileSync 'config.json'
 
 express = require 'express'
-mongo = require 'mongodb'
-mongoose = require 'mongoose'
+conn = require('../mongoose')()
 router = express.Router()
 bcrypt = require 'bcrypt-nodejs'
 passport = require 'passport'
-User = require '../models/user'
-Stats = require '../models/stats'
 dateFormat = require '../public/coffee/date.format'
 socket = require '../socket'
 config = config
+
+User = require('../models/user')
+  conn: conn
+Stats = require('../models/stats')
+  conn: conn
 
 router.get '/', (req, res, next)->
   if req.isAuthenticated()
@@ -51,10 +53,10 @@ router.post '/signin', (req, res, next)->
   req.checkBody('login', 'Login field is empty!').notEmpty()
   req.checkBody('password', 'Password field is empty!').notEmpty()
   errors = req.validationErrors()
-  if errors then return res.end(JSON.stringify(errors))
+  if errors then return res.end JSON.stringify errors
   passport.authenticate('local', (err, user, info)->
     if info then errors = [{msg: info.error}]
-    if err then return next(err)
+    if err then return next err
     if !user then return res.end(JSON.stringify(errors))
     req.logIn user, (err)->
       if err then return next(err)

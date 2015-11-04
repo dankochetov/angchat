@@ -6,13 +6,20 @@ SockJS = require 'sockjs-client'
 
 socket = null
 socketInit = new Promise (resolve)->
-	request "http://#{ip.address()}:#{config.ports.api}/api/getsocketport", (err, res, body)->
-		socket = new SockJS "http://#{ip.address()}:#{body}/sockjs"
-		socket.onopen = ->
-			resolve()
+	for item in config.ports
+		for ps in item.ps
+			if ps is 'api'
+				PORT_API = item.port
+				break
 
-		
-
+	for item in config.ports
+		for ps in item.ps
+			if ps is 'socket'
+				request "http://#{ip.address()}:#{PORT_API}/api/getsocketport", (err, res, body)->
+					socket = new SockJS "http://#{ip.address()}:#{body}/sockjs"
+					socket.onopen = ->
+						resolve()
+				break
 
 module.exports =
 	emit: (event, data)->

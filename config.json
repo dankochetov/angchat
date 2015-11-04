@@ -1,13 +1,20 @@
 {
-  "ports": {
-    "html": "46850",
-    "api": "46850",
-    "sockets": [
-      3002,
-      "46850",
-      3004
-    ]
-  },
+  "ports": [
+    {
+      "port": 3000,
+      "ps": [
+        "api"
+      ]
+    },
+    {
+        "port": 3100,
+        "ps": ["socket"]
+    },
+    {
+        "port": 3006,
+        "ps": ["html"]
+    }
+  ],
   "events": {
     "new user": 0,
     "update users": 1,

@@ -20,5 +20,11 @@ chatio.config ['$locationProvider', ($locationProvider)->
 
 HOST = window.location.hostname
 
-HOST_HTML = 'http://' + window.location.hostname + ":#{config.ports.html}"
-HOST_API = 'http://' + window.location.hostname + ":#{config.ports.api}"
+for item in config.ports
+	for ps in item.ps
+		if ps is 'html'
+			HOST_HTML = 'http://' + window.location.hostname + ":#{item.port}"
+		if ps is 'api'
+			HOST_API = 'http://' + window.location.hostname + ":#{item.port}"
+
+console.log HOST_HTML, HOST_API
