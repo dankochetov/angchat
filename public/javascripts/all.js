@@ -2116,16 +2116,7 @@ chatio.factory('socket', [
       init: function() {
         var initSocket, sockInit;
         sockInit = $q.defer();
-        if (config.env === 'dev') {
-          $http.get(HOST_API + "/api/getsocketport").then(function(response) {
-            sock = new SockJS(HOST + ":" + response.data + "/sockjs");
-            return initSocket();
-          });
-        } else {
-          sock = new SockJS(HOST + "/sockjs");
-          initSocket();
-        }
-        return initSocket = function() {
+        initSocket = function() {
           sock.onopen = function() {
             return ready.resolve();
           };
@@ -2150,6 +2141,15 @@ chatio.factory('socket', [
             return results;
           };
         };
+        if (config.env === 'dev') {
+          return $http.get(HOST_API + "/api/getsocketport").then(function(response) {
+            sock = new SockJS(HOST + ":" + response.data + "/sockjs");
+            return initSocket();
+          });
+        } else {
+          sock = new SockJS(HOST + "/sockjs");
+          return initSocket();
+        }
       },
       on: function(event, callback) {
         var id;

@@ -5,13 +5,6 @@ chatio.factory 'socket', ['$rootScope', '$q', '$http', ($rootScope, $q, $http)->
     {
       init: ->
         sockInit = $q.defer()
-        if config.env is 'dev'
-          $http.get("#{HOST_API}/api/getsocketport").then (response)->
-            sock = new SockJS "#{HOST}:#{response.data}/sockjs"
-            initSocket()
-        else
-          sock = new SockJS "#{HOST}/sockjs"
-          initSocket()
 
         initSocket = ->
           sock.onopen = ->
@@ -23,6 +16,14 @@ chatio.factory 'socket', ['$rootScope', '$q', '$http', ($rootScope, $q, $http)->
                 if i.toString() is data.event.toString()
                   for k of listeners[i]
                     listeners[i][k].callback data.data
+                    
+        if config.env is 'dev'
+          $http.get("#{HOST_API}/api/getsocketport").then (response)->
+            sock = new SockJS "#{HOST}:#{response.data}/sockjs"
+            initSocket()
+        else
+          sock = new SockJS "#{HOST}/sockjs"
+          initSocket()
             
 
       on: (event, callback)->
