@@ -10,7 +10,7 @@ chatio.factory 'socket', ['$rootScope', '$q', '$http', ($rootScope, $q, $http)->
             sock = new SockJS "#{HOST}:#{response.data}/sockjs"
             initSocket()
         else
-          sock = new SockJS "#{HOST}:#{config.ports[0].port}/sockjs"
+          sock = new SockJS "#{HOST}/sockjs"
           initSocket()
 
         initSocket = ->

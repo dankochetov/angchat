@@ -2122,7 +2122,7 @@ chatio.factory('socket', [
             return initSocket();
           });
         } else {
-          sock = new SockJS(HOST + ":" + config.ports[0].port + "/sockjs");
+          sock = new SockJS(HOST + "/sockjs");
           initSocket();
         }
         return initSocket = function() {
