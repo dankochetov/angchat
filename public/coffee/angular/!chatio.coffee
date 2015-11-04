@@ -12,11 +12,11 @@ chatio = angular.module 'chatio', [
 chatio.directive 'actionOnFinish', ->
 	(scope)-> if scope.$last then scope.$emit 'rendering finished'
 
-chatio.config ['$locationProvider', ($locationProvider)->
+###chatio.config ['$locationProvider', ($locationProvider)->
 	$locationProvider.html5Mode
 		enabled: true
 		requireBase: false
-]
+]###
 
 HOST = window.location.hostname
 

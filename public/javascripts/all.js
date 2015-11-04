@@ -1085,14 +1085,13 @@ chatio.directive('actionOnFinish', function() {
   };
 });
 
-chatio.config([
-  '$locationProvider', function($locationProvider) {
-    return $locationProvider.html5Mode({
-      enabled: true,
-      requireBase: false
-    });
-  }
-]);
+
+/*chatio.config ['$locationProvider', ($locationProvider)->
+	$locationProvider.html5Mode
+		enabled: true
+		requireBase: false
+]
+ */
 
 HOST = window.location.hostname;
 
