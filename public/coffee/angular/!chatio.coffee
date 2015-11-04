@@ -1,6 +1,6 @@
 # remove the url hash that appears when logging in with facebook
 if window.location.hash and window.location.hash is '#_=_' then window.location.hash = ''
-history.pushState '', document.title, window.location.pathname + window.location.search
+if 'replaceState' in history then history.replaceState '', document.title, window.location.pathname + window.location.search
 
 chatio = angular.module 'chatio', [
 	'ngRoute'
