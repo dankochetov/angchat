@@ -14,7 +14,7 @@ chatio.controller 'myroomsCtrl', ['$scope', '$http', '$rootScope', '$timeout', '
   socket.emit config.events['get rooms'], $rootScope.user._id
 
   listeners.push socket.on config.events['rooms'], (rooms) ->
-    for i, room in rooms
+    for i, room of rooms
       if room.owner isnt $rootScope.user._id then rooms.splice i, 1
     $timeout ->
       $scope.loading = false
