@@ -1602,16 +1602,18 @@ chatio.controller('myroomsCtrl', [
     socket.emit(config.events['get rooms'], $rootScope.user._id);
     listeners.push(socket.on(config.events['rooms'], function(rooms) {
       var i, j, len, room;
-      for (i = j = 0, len = rooms.length; j < len; i = ++j) {
-        room = rooms[i];
-        if (room.owner !== $rootScope.user._id) {
-          rooms.splice(i, 1);
+      if (rooms.length > 0) {
+        for (i = j = 0, len = rooms.length; j < len; i = ++j) {
+          room = rooms[i];
+          if (room.owner !== $rootScope.user._id) {
+            rooms.splice(i, 1);
+          }
         }
+        return $timeout(function() {
+          $scope.loading = false;
+          return $scope.rooms = rooms;
+        });
       }
-      return $timeout(function() {
-        $scope.loading = false;
-        return $scope.rooms = rooms;
-      });
     }));
     $scope["delete"] = function(room) {
       if (room.online === 0 && confirm('Are you sure you want to delete the "' + room.name + '" room?')) {
