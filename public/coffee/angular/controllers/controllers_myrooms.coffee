@@ -1,5 +1,9 @@
 chatio.controller 'myroomsCtrl', ['$scope', '$http', '$rootScope', '$timeout', 'socket', 'autoLogout', 'template', ($scope, $http, $rootScope, $timeout, socket, autoLogout, template) ->
 
+  if not $rootScope.user?
+    template.go '/index'
+    template.clear
+
   $scope.rooms = []
   $scope.loading = true
   listeners = []

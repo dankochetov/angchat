@@ -1588,6 +1588,10 @@ chatio.controller('modalCtrl', [
 chatio.controller('myroomsCtrl', [
   '$scope', '$http', '$rootScope', '$timeout', 'socket', 'autoLogout', 'template', function($scope, $http, $rootScope, $timeout, socket, autoLogout, template) {
     var listeners;
+    if ($rootScope.user == null) {
+      template.go('/index');
+      template.clear;
+    }
     $scope.rooms = [];
     $scope.loading = true;
     listeners = [];
