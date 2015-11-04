@@ -1,3 +1,5 @@
+if window.location.hash and window.location.hash is '#_=_' then window.location.hash = ''
+
 chatio = angular.module 'chatio', [
 	'ngRoute'
 	'ngCookies'
