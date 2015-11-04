@@ -28,6 +28,7 @@ redis.sub.on 'message', (ch, data)->
 
 				when 'error'
 					console.log data.error
+					console.log 'terminating...'
 					process.exit 1
 
 f = true
