@@ -12,14 +12,19 @@ socketInit = new Promise (resolve)->
 				PORT_API = item.port
 				break
 
-	for item in config.ports
-		for ps in item.ps
-			if ps is 'socket'
-				request "http://#{ip.address()}:#{PORT_API}/api/getsocketport", (err, res, body)->
-					socket = new SockJS "http://#{ip.address()}:#{body}/sockjs"
-					socket.onopen = ->
-						resolve()
-				break
+	if config.env is 'dev'
+		for item in config.ports
+			for ps in item.ps
+				if ps is 'socket'
+					request "http://#{ip.address()}:#{PORT_API}/api/getsocketport", (err, res, body)->
+						socket = new SockJS "http://#{ip.address()}:#{body}/sockjs"
+						socket.onopen = ->
+							resolve()
+					break
+	else
+		socket = new SockJS "http://#{ip.address()}/sockjs"
+		socket.onopen = ->
+			resolve()
 
 module.exports =
 	emit: (event, data)->

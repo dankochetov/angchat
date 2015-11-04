@@ -8,7 +8,7 @@ redis =
 	sub: require('./redis')()
 
 if process.env.PORT?
-	config.ports[0].port = process.env.PORT
+	config.env = "prod"
 	jsonfile.writeFileSync 'config.json', config
 
 redis.sub.subscribe 'client'

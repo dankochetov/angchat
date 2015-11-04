@@ -1096,22 +1096,24 @@ chatio.config([
 
 HOST = window.location.hostname;
 
-ref = config.ports;
-for (i = 0, len = ref.length; i < len; i++) {
-  item = ref[i];
-  ref1 = item.ps;
-  for (j = 0, len1 = ref1.length; j < len1; j++) {
-    ps = ref1[j];
-    if (ps === 'html') {
-      HOST_HTML = 'http://' + window.location.hostname + (":" + item.port);
-    }
-    if (ps === 'api') {
-      HOST_API = 'http://' + window.location.hostname + (":" + item.port);
+if (config.env === 'dev') {
+  ref = config.ports;
+  for (i = 0, len = ref.length; i < len; i++) {
+    item = ref[i];
+    ref1 = item.ps;
+    for (j = 0, len1 = ref1.length; j < len1; j++) {
+      ps = ref1[j];
+      if (ps === 'html') {
+        HOST_HTML = 'http://' + window.location.hostname + (":" + item.port);
+      }
+      if (ps === 'api') {
+        HOST_API = 'http://' + window.location.hostname + (":" + item.port);
+      }
     }
   }
+} else {
+  HOST_HTML = HOST_API = HOST;
 }
-
-console.log(HOST_HTML, HOST_API);
 
 chatio.factory('autoLogout', [
   '$rootScope', '$location', '$route', '$http', 'socket', 'template', function($rootScope, $location, $route, $http, socket, template) {
