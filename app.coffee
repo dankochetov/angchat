@@ -9,6 +9,7 @@ redis =
 
 if process.env.PORT?
 	config.env = "prod"
+	config.ports[0].port = process.env.PORT
 	jsonfile.writeFileSync 'config.json', config
 
 redis.sub.subscribe 'client'
