@@ -22,7 +22,7 @@ socketInit = new Promise (resolve)->
 							resolve()
 					break
 	else
-		socket = new SockJS "http://#{ip.address()}/sockjs"
+		socket = new SockJS "http://#{ip.address()}:#{config.ports[0].port}/sockjs"
 		socket.onopen = ->
 			resolve()
 

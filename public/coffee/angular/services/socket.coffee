@@ -1,22 +1,29 @@
 chatio.factory 'socket', ['$rootScope', '$q', '$http', ($rootScope, $q, $http)->
     ready = $q.defer()
-    sock = undefined
+    sock = null
     listeners = []
     {
       init: ->
         sockInit = $q.defer()
-        $http.get("#{HOST_API}/api/getsocketport").then (response)->
-          sock = new SockJS "#{HOST}:#{response.data}/sockjs"
+        if config.env is 'dev'
+          $http.get("#{HOST_API}/api/getsocketport").then (response)->
+            sock = new SockJS "#{HOST}:#{response.data}/sockjs"
+            initSocket()
+        else
+          sock = new SockJS "#{HOST}:#{config.ports[0].port}/sockjs"
+          initSocket()
 
+        initSocket = ->
           sock.onopen = ->
-            ready.resolve()
+              ready.resolve()
 
-          sock.onmessage = (e)->
-            data = JSON.parse e.data
-            for i of listeners
-              if i.toString() is data.event.toString()
-                for k of listeners[i]
-                  listeners[i][k].callback data.data
+            sock.onmessage = (e)->
+              data = JSON.parse e.data
+              for i of listeners
+                if i.toString() is data.event.toString()
+                  for k of listeners[i]
+                    listeners[i][k].callback data.data
+            
 
       on: (event, callback)->
         if not listeners[event]? then listeners[event] = [] 
