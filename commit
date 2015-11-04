@@ -4,6 +4,6 @@ git add . -A
 echo "Commiting..."
 git commit -m "Added"
 echo "Pushing to GitHub..."
-git push origin master | printf 'kochetovdd\nms17081981ntv'
+git push origin master | printf 'kochetovdd\nms17081981ntv\n'
 echo "Pushing to Heroku..."
 git push heroku master

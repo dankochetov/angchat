@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "postinstall": "grunt css js",
+    "postinstall": "grunt",
     "start": "coffee app.coffee"
   },
   "dependencies": {

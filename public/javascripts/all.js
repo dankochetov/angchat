@@ -1605,13 +1605,9 @@ chatio.controller('myroomsCtrl', [
     });
     socket.emit(config.events['get rooms'], $rootScope.user._id);
     listeners.push(socket.on(config.events['rooms'], function(rooms) {
-      var i, room;
-      for (i in rooms) {
-        room = rooms[i];
-        if (room.owner !== $rootScope.user._id) {
-          rooms.splice(i, 1);
-        }
-      }
+      rooms = rooms.filter(function(room) {
+        return room.owner === $rootScope.user._id;
+      });
       return $timeout(function() {
         $scope.loading = false;
         return $scope.rooms = rooms;
