@@ -3,16 +3,8 @@
     {
       "port": 3000,
       "ps": [
-        "api"
+        "html", "api", "socket"
       ]
-    },
-    {
-        "port": 3100,
-        "ps": ["socket"]
-    },
-    {
-        "port": 3006,
-        "ps": ["html"]
     }
   ],
   "events": {
