@@ -1,0 +1,9 @@
+#!/bin/bash
+echo "Adding files..."
+git add . -A
+echo "Commiting..."
+git commit -m "Added"
+echo "Pushing to GitHub..."
+git push origin master
+echo "Pushing to Heroku..."
+git push heroku master

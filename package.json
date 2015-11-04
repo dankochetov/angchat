@@ -39,7 +39,8 @@
     "sockjs": "*",
     "uuid": "*",
     "redis": "*",
-    "jsonfile": "*"
+    "jsonfile": "*",
+    "ip": "*"
   },
   "devDependencies": {
     "grunt-contrib-watch": "^0.6.1"
