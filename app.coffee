@@ -9,7 +9,7 @@ redis =
 
 if process.env.PORT?
 	config.env = "prod"
-	config.ports[0].port = process.env.PORT
+	config.ports.prod[0].port = process.env.PORT
 	jsonfile.writeFileSync 'config.json', config
 
 redis.sub.subscribe 'client'
@@ -39,7 +39,7 @@ started = {}
 
 startProcess = (data)->
 	# launch all processes with matching process in list. Skip already started processes
-	for item in config.ports
+	for item in config.ports[config.env]
 		if started[item.port] then continue
 		for ps in item.ps
 			if ps is data
@@ -50,7 +50,7 @@ startProcess = (data)->
 						arr: item.ps
 					f = false
 				else
-					t = childProcess.exec("coffee process.coffee #{item.port} #{item.ps.join ' '}")
+					t = childProcess.exec "coffee process.coffee #{item.port} #{item.ps.join ' '}"
 					t.stdout.on 'data', (data)->
 						process.stdout.write data
 					t.stderr.on 'data', (data)->

@@ -9,18 +9,18 @@ app = express()
 initApp = (arr, app)->
 	server = app.listen app.get 'port'
 	# start socket first, then api, then html
-	if arr.indexOf 'socket' > -1
+	if 'socket' in arr
 		require('./ps/socket')
 			server: server
-	if arr.indexOf 'api' > -1
+	if 'api' in arr
 		app.use '/', require("./ps/api")()
-	if arr.indexOf 'html' > -1
+	if 'html' in arr
 		app.use '/', require("./ps/html")()
 
 if not process.argv[2]?
-	module.exports = (config)->
-		app.set 'port', config.port
-		initApp config.arr, app
+	module.exports = (opts)->
+		app.set 'port', opts.port
+		initApp opts.arr, app
 else
 	app.set 'port', process.argv[2]
 	initApp process.argv[3..], app

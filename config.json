@@ -1,13 +1,35 @@
 {
   "env": "dev",
-  "ports": [
-    {
-      "port": 3000,
-      "ps": [
-        "html", "api", "socket"
-      ]
-    }
-  ],
+  "ports": {
+    "prod": [
+        {
+          "port": 3000,
+          "ps": [
+            "html", "api", "socket"
+          ]
+        }
+    ],
+    "dev": [
+        {
+          "port": 3000,
+          "ps": [
+            "html", "api", "socket"
+          ]
+        },
+        {
+            "port": 3002,
+            "ps": ["socket"]
+        },
+        {
+            "port": 3003,
+            "ps": ["socket"]
+        },
+        {
+            "port": 3004,
+            "ps": ["socket"]
+        }
+    ]
+  },
   "events": {
     "new user": 0,
     "update users": 1,

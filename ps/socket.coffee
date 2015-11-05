@@ -11,6 +11,26 @@ module.exports = (opts)->
   redis =
     pub: require('../redis')()
     sub: require('../redis')()
+    request: (opts)->
+      count = 0
+      id = uuid.v4()
+      opts.id = id
+      redis.pub.publish 'socket', JSON.stringify opts
+      listener = (ch, data)->
+        data = JSON.parse data
+        if ch is 'socket' and data.id is opts.id
+          @onChunk data.data
+          ++count
+          if count is redis.pub.pubsub 'numsub', 'socket'
+            redis.sub.removeListener 'message', listener
+            @onEnd()
+      redis.sub.addListener 'message', listener
+
+      onChunk: (fn)=>
+        @onChunk = fn
+
+      onEnd: (fn)=>
+        @onEnd = fn
 
   Room = require('../models/room')
     conn: conn
@@ -24,18 +44,20 @@ module.exports = (opts)->
     port: opts.server.address().port
     redis: redis.pub
 
-  redis.sub.subscribe 'exit'
+  redis.sub.subscribe 'server'
+  redis.sub.subscribe 'socket'
 
   redis.sub.on 'message', (ch, data)->
-    data = JSON.parse data
     switch ch
-
-      when 'exit' then process.exit 0
+      when 'server'
+        data = JSON.parse data
+        switch data.event
+          when 'exit' then process.exit 0
 
   sockjs = require('sockjs').createServer sockjs_url: 'javascripts/source/sockjs.min.js'
-  connections = []
   sockjs.installHandlers opts.server, prefix: '/sockjs'
 
+  connections = []
   users = []
   rooms = []
 
@@ -49,10 +71,18 @@ module.exports = (opts)->
   emitRoom = (room, event, data)->
     for id of rooms[room]
       emit users[rooms[room][id]].socket, event, data
+      redis.pub.publish 'emit:room', JSON.stringify
+        room: room
+        event: event
+        data: data
 
   broadcast = (event, data)->
     for sockid of connections
       emit connections[sockid], event, data
+      redis.pub.publish 'emit:all', JSON.stringify
+        event: event
+        data: data
+
   sockjs.on 'connection', (socket)->
 
     console.log 'new connection'
@@ -66,20 +96,19 @@ module.exports = (opts)->
       switch event
         when config.events['new user']
           if typeof data is 'string' then data = JSON.parse(data)
-          if !rooms[data.room._id] then rooms[data.room._id] = []
-          f = true
-          for i of rooms[data.room._id]
-            if rooms[data.room._id][i] is socket.id
-              f = false
-              break
-          if f then rooms[data.room._id].push socket.id
-          if !users[socket.id]
-            users[socket.id] =
+          if not rooms[data.room._id]? then rooms[data.room._id] = []
+          if not (data.user._id in rooms[data.room._id])
+            rooms[data.room._id].push data.user._id
+          if not users[data.user._id]?
+            users[data.user._id] =
               socket: socket
-              rooms: [ data.room._id ]
+              rooms: [data.room._id]
               user: data.user
+              connections: 1
           else
-            users[socket.id].rooms.push data.room._id
+            if not (data.room._id in users[data.user._id])
+              users[data.user._id].rooms.push data.room._id
+            ++users[data.user._id].connections
           updateUsers data.room._id
           updateRooms()
 
@@ -114,11 +143,15 @@ module.exports = (opts)->
         when config.events['send message']
           if typeof data is 'string' then data = JSON.parse data
           Stats.inc ['messages', 'public']
+          for user in users
+            if user.socket.id is socket.id
+              username = user.user.username
+              break
           msg = 
             text: data.msg
             room: data.roomid
             time: Date.now()
-            username: users[socket.id].user.username
+            username: username
           addMessage msg, ->
             emitRoom data.roomid, config.events['new message'], msg
             emitRoom 'listeners', config.events['new message'], msg
@@ -126,19 +159,30 @@ module.exports = (opts)->
         when config.events['send private message']
           if typeof data is 'string' then data = JSON.parse(data)
           Stats.inc ['messages', 'private']
+          for user in users
+            if user.socket.id is socket.id
+              user = user.user
+              break
           msg = 
             text: data.msg
             private: true
-            from: users[socket.id].user._id
+            from: user._id
             to: data.to
-            username: users[socket.id].user.username
+            username: user.username
             time: Date.now()
           addMessage msg, ->
+            redis.pub.publish 'socket', JSON.stringify
+              event: 'send private message'
+              to: data.to
+              msg: msg
+
+#################################### move to listener ####################################
             for i of users
               if users[i].user._id is msg.to
                 emit users[i].socket, config.events['new private message'], msg
             emit socket, config.events['new private message'], msg
             broadcast config.events['listener event'], msg
+#################################### / move to listener ##################################
 
         when config.events['clear history']
           clearHistory data, users[socket.id].user._id, ->
@@ -159,11 +203,11 @@ module.exports = (opts)->
             if err then throw err
             updateRooms()
             Message.query N1QL.fromString 'delete from `test1` where room = "' + data.roomid + '"'
-            if err then throw err
 
         when config.events['admin:delete room']
           Stats.inc ['rooms', 'deleted']
-          Room.findById(data).remove ->
+          Room.findById(data).remove (err)->
+            if err then throw err
             broadcast config.events['kick'], data
             updateRooms()
             Message.query N1QL.fromString 'delete from `test1` where room = "' + data + '"'
@@ -274,16 +318,31 @@ module.exports = (opts)->
       for cur of found
         id = found[cur]._id
         arr = []
-        for i of rooms[id]
-          f = true
-          for k of arr
-            if users[arr[k]].user._id is users[rooms[id][i]].user._id
-              f = false
-              break
-          if f
-            arr.push rooms[id][i]
-        found[cur].online = arr.length
-      broadcast config.events['rooms'], found
+        @rooms = []
+        req = new redis.request
+          event: 'get content'
+          arr: 'rooms'
+          id: id
+        req.onChunk (data)=>
+          @rooms = @rooms.concat JSON.parse data
+        req.onEnd =>
+          @users = []
+          req = new redis.request
+            event: 'get content'
+            arr: 'users'
+          req.onChunk (data)=>
+            @users = @users.concat JSON.parse data
+          req.onEnd =>
+            for i of rooms[id]
+              f = true
+              for k of arr
+                if users[arr[k]].user._id is users[rooms[id][i]].user._id
+                  f = false
+                  break
+              if f
+                arr.push rooms[id][i]
+            found[cur].online = arr.length
+          broadcast config.events['rooms'], found
       
   leaveRoom = (socket, id)->
     if rooms[id]? and rooms[id].length > 0
@@ -304,11 +363,16 @@ module.exports = (opts)->
 
   disconnect = (socket)->
     console.log 'disconnected'
-    return if !users[socket.id]?
+    f = true
+    for user in users
+      if user.socket.id is socket.id
+        f = false
+        break
+    if f then return
     len = users[socket.id].rooms.length
     i = 0
     while i < len
-      cur = users[socket.id].rooms[0]
+      cur = users[socket.id].rooms[i]
       leaveRoom socket, cur
       Room.findById cur, (err, room)->
         if err then throw err
@@ -322,14 +386,29 @@ module.exports = (opts)->
   updateUsers = (roomid)->
     roomid = roomid.toString()
     res = []
-    for cur of rooms[roomid]
-      f = true
-      for id of res
-        if res[id]._id is users[rooms[roomid][cur]].user._id
-          f = false
-          break
-      if f then res.push users[rooms[roomid][cur]].user
-    emitRoom roomid, config.events['users'], res
+    @rooms = []
+    req = new redis.request
+      event: 'get content'
+      arr: 'rooms'
+      id: roomid
+    req.onChunk (data)=>
+      @rooms = res.concat JSON.parse data
+    req.onEnd =>
+      req = new redis.request
+        event: 'get content'
+        arr: 'users'
+      @users = []
+      req.onChunk (data)=>
+        @users = @users.concat JSON.parse data
+      req.onEnd =>
+        for i, room in @rooms
+          f = true
+          for k, item in res
+            if item._id is @users[room].user._id
+              f = false
+              break
+          if f then res.push @users[room].user
+        emitRoom roomid, config.events['users'], res
 
   updateHistory = (roomid)->
     getHistory roomid, (messages)->

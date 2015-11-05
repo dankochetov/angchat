@@ -25,7 +25,7 @@ chatio.directive 'actionOnFinish', ->
 HOST = window.location.hostname
 
 if config.env is 'dev'
-	for item in config.ports
+	for item in config.ports.dev
 		for ps in item.ps
 			if ps is 'html'
 				HOST_HTML = 'http://' + window.location.hostname + ":#{item.port}"

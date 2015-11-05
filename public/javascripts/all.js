@@ -1104,7 +1104,7 @@ chatio.directive('actionOnFinish', function() {
 HOST = window.location.hostname;
 
 if (config.env === 'dev') {
-  ref = config.ports;
+  ref = config.ports.dev;
   for (i = 0, len = ref.length; i < len; i++) {
     item = ref[i];
     ref1 = item.ps;
