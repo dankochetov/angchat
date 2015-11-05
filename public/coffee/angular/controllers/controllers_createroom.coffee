@@ -1,4 +1,4 @@
-chatio.controller 'createroomCtrl', ['$scope', '$http', '$location', 'template', 'autoLogout', 'tabs', ($scope, $http, $location, template, autoLogout, tabs) ->
+chatio.controller 'createroomCtrl', ['$scope', '$rootScope', '$http', '$location', 'template', 'autoLogout', 'tabs', ($scope, $rootScope, $http, $location, template, autoLogout, tabs) ->
 
   if not $rootScope.user?
     template.go '/index'
